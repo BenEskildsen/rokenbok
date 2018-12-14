@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.container {
+  font-family: "Courier New", sans-serif;
+  font-weight: 300;
+}
+
+.sidebar {
+  border: 1px solid black;
+  width: 300px;
+  height: 600px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+canvas {
+  border: 1px solid black;
+  width: 800px;
+  height: 600px;
+  float: left;
+  margin: 5px;
+}
+
+
+
