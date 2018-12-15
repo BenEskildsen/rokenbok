@@ -6,8 +6,10 @@ const {
   TRUCK_HEIGHT,
   MINER_SPEED,
   MINER_RADIUS,
-  BOK_SIze,
+  BOK_SIZE,
+  FACTORY_SIZE,
 } = require('../settings');
+const {distance} = require('../utils');
 
 const tickReducer = (state: State, action: Action): State => {
   return {
@@ -20,6 +22,7 @@ const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
   // Update speeds and positions
   for (const entity of entities) {
     entity.speed += entity.accel;
+    entity.theta += entity.thetaSpeed;
     if (entity.type == 'truck') {
       entity.speed = entity.speed > TRUCK_SPEED ? TRUCK_SPEED : entity.speed;
     } else if (entity.type == 'miner') {
@@ -31,34 +34,72 @@ const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
   }
 
   // Handle collisions with each other
-  for (let i = 0; i < entities.length; i++) {
-    for (let j = i + 1; j < entities.length; j++) {
-      const entityA = entities[i];
-      const entityB = entities[j];
-      if (collided(entityA, entityB)) {
-        // TODO
+  const nonBokEntities = entities.filter(entity => entity.type != 'bok');
+  // const bokEntities = entities.filter(entity => entity.type == 'bok');
+  const bokEntities = [];
+  for (let i = 0; i < nonBokEntities.length; i++) {
+    const entity = nonBokEntities[i];
+    for (let j = 0; j < bokEntities.length; j++) {
+      const bok = bokEntities[j];
+      if (collided(entity, bok)) {
+        // trucks destroy boks they hit
+        if (entity.type == 'truck') {
+          entity.speed /= 2;
+          bok.shouldDestroy = true;
+        }
+        // miners pick up boks they hit
+        if (entity.type == 'miner') {
+          bok.shouldDestroy = true;
+          entity.carrying = [bok];
+          entity.speed *= -1 * entity.speed;
+        }
       }
     }
+    // miners should drop off at trucks/factories they hit
+    // TODO
+
   }
 
-  return entities;
+  return entities.filter(entity => !entity.shouldDestroy);
 }
 
 const collided = (entityA: Entity, entityB: Entity): boolean => {
   if (entityA == entityB) {
     return false;
   }
-  return false;
   // naive -- circles only
-  // const radiusA = entityA.type == 'ball' ? entityA.radius : entityA.width / 2;
-  // const radiusB = entityB.type == 'ball' ? entityB.radius : entityB.width / 2;
-  // return distance(entityA, entityB) <= radiusA + radiusB;
-};
+  let radiusA = 0;
+  switch (entityA.type) {
+    case 'truck':
+      radiusA = TRUCK_WIDTH / 2;
+      break;
+    case 'miner':
+      radiusA = MINER_RADIUS;
+      break;
+    case 'bok':
+      radiusA = BOK_SIZE / 2;
+      break;
+    case 'factory':
+      radiusA = FACTORY_SIZE / 2;
+      break;
+  }
+  let radiusB = 0;
+  switch (entityB.type) {
+    case 'truck':
+      radiusB = TRUCK_WIDTH / 2;
+      break;
+    case 'miner':
+      radiusB = MINER_RADIUS;
+      break;
+    case 'bok':
+      radiusB = BOK_SIZE / 2;
+      break;
+    case 'factory':
+      radiusB = FACTORY_SIZE / 2;
+      break;
+  }
 
-const distance = (entityA, entityB) => {
-  const xDist = entityA.x - entityB.x;
-  const yDist = entityA.y - entityB.y;
-  return Math.sqrt(xDist * xDist + yDist * yDist);
+  return distance(entityA, entityB) <= radiusA + radiusB;
 };
 
 module.exports = {

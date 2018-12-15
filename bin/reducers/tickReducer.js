@@ -8,7 +8,11 @@ var _require = require('../settings'),
     TRUCK_HEIGHT = _require.TRUCK_HEIGHT,
     MINER_SPEED = _require.MINER_SPEED,
     MINER_RADIUS = _require.MINER_RADIUS,
-    BOK_SIze = _require.BOK_SIze;
+    BOK_SIZE = _require.BOK_SIZE,
+    FACTORY_SIZE = _require.FACTORY_SIZE;
+
+var _require2 = require('../utils'),
+    distance = _require2.distance;
 
 var tickReducer = function tickReducer(state, action) {
   return _extends({}, state, {
@@ -24,17 +28,18 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
 
   try {
     for (var _iterator = entities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var entity = _step.value;
+      var _entity = _step.value;
 
-      entity.speed += entity.accel;
-      if (entity.type == 'truck') {
-        entity.speed = entity.speed > TRUCK_SPEED ? TRUCK_SPEED : entity.speed;
-      } else if (entity.type == 'miner') {
-        entity.speed = entity.speed > MINER_SPEED ? MINER_SPEED : entity.speed;
+      _entity.speed += _entity.accel;
+      _entity.theta += _entity.thetaSpeed;
+      if (_entity.type == 'truck') {
+        _entity.speed = _entity.speed > TRUCK_SPEED ? TRUCK_SPEED : _entity.speed;
+      } else if (_entity.type == 'miner') {
+        _entity.speed = _entity.speed > MINER_SPEED ? MINER_SPEED : _entity.speed;
       }
-      entity.speed = entity.speed < 0 ? 0 : entity.speed; // NOTE: can't reverse
-      entity.x += -1 * Math.sin(entity.theta) * entity.speed;
-      entity.y += Math.cos(entity.theta) * entity.speed;
+      _entity.speed = _entity.speed < 0 ? 0 : _entity.speed; // NOTE: can't reverse
+      _entity.x += -1 * Math.sin(_entity.theta) * _entity.speed;
+      _entity.y += Math.cos(_entity.theta) * _entity.speed;
     }
 
     // Handle collisions with each other
@@ -53,34 +58,75 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
     }
   }
 
-  for (var i = 0; i < entities.length; i++) {
-    for (var j = i + 1; j < entities.length; j++) {
-      var entityA = entities[i];
-      var entityB = entities[j];
-      if (collided(entityA, entityB)) {
-        // TODO
+  var nonBokEntities = entities.filter(function (entity) {
+    return entity.type != 'bok';
+  });
+  // const bokEntities = entities.filter(entity => entity.type == 'bok');
+  var bokEntities = [];
+  for (var i = 0; i < nonBokEntities.length; i++) {
+    var entity = nonBokEntities[i];
+    for (var j = 0; j < bokEntities.length; j++) {
+      var bok = bokEntities[j];
+      if (collided(entity, bok)) {
+        // trucks destroy boks they hit
+        if (entity.type == 'truck') {
+          entity.speed /= 2;
+          bok.shouldDestroy = true;
+        }
+        // miners pick up boks they hit
+        if (entity.type == 'miner') {
+          bok.shouldDestroy = true;
+          entity.carrying = [bok];
+          entity.speed *= -1 * entity.speed;
+        }
       }
     }
+    // miners should drop off at trucks/factories they hit
+    // TODO
   }
 
-  return entities;
+  return entities.filter(function (entity) {
+    return !entity.shouldDestroy;
+  });
 };
 
 var collided = function collided(entityA, entityB) {
   if (entityA == entityB) {
     return false;
   }
-  return false;
   // naive -- circles only
-  // const radiusA = entityA.type == 'ball' ? entityA.radius : entityA.width / 2;
-  // const radiusB = entityB.type == 'ball' ? entityB.radius : entityB.width / 2;
-  // return distance(entityA, entityB) <= radiusA + radiusB;
-};
+  var radiusA = 0;
+  switch (entityA.type) {
+    case 'truck':
+      radiusA = TRUCK_WIDTH / 2;
+      break;
+    case 'miner':
+      radiusA = MINER_RADIUS;
+      break;
+    case 'bok':
+      radiusA = BOK_SIZE / 2;
+      break;
+    case 'factory':
+      radiusA = FACTORY_SIZE / 2;
+      break;
+  }
+  var radiusB = 0;
+  switch (entityB.type) {
+    case 'truck':
+      radiusB = TRUCK_WIDTH / 2;
+      break;
+    case 'miner':
+      radiusB = MINER_RADIUS;
+      break;
+    case 'bok':
+      radiusB = BOK_SIZE / 2;
+      break;
+    case 'factory':
+      radiusB = FACTORY_SIZE / 2;
+      break;
+  }
 
-var distance = function distance(entityA, entityB) {
-  var xDist = entityA.x - entityB.x;
-  var yDist = entityA.y - entityB.y;
-  return Math.sqrt(xDist * xDist + yDist * yDist);
+  return distance(entityA, entityB) <= radiusA + radiusB;
 };
 
 module.exports = {

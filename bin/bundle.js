@@ -5,11 +5,16 @@ var setControls = function setControls(store, gameRunner) {
   var canvas = document.getElementById('canvas');
   var rect = canvas.getBoundingClientRect();
   canvas.onmousedown = function (ev) {
+    var x = ev.clientX - rect.left;
+    var y = ev.clientY - rect.top;
     if (ev.button == 0) {
-      // left click, 2 for right click
-      var x = ev.clientX - rect.left;
-      var y = ev.clientY - rect.top;
+      // left click
       store.dispatch({ type: 'MOUSE_DOWN', x: x, y: y });
+    }
+
+    if (ev.button == 2) {
+      // right click
+      store.dispatch({ type: 'MAYBE_SELECT', x: x, y: y });
     }
   };
 
@@ -19,6 +24,11 @@ var setControls = function setControls(store, gameRunner) {
       store.dispatch({ type: 'MOUSE_UP' });
     }
   };
+
+  // don't open the normal right-click menu
+  canvas.addEventListener('contextmenu', function (ev) {
+    return ev.preventDefault();
+  });
 
   canvas.onmousemove = function (ev) {
     if (store.getState().view.dragging) {
@@ -43,20 +53,36 @@ var setControls = function setControls(store, gameRunner) {
           gameRunner.pause(gameRunner.interval);
         }
         break;
-      // case 38: // up
-      //   store.dispatch({type: 'ACCELERATE', player: 0});
-      //   break;
-      // case 37: // left
-      //   store.dispatch({type: 'TURN', dir: -1, player: 0});
-      //   break;
-      // case 39: // right
-      //   store.dispatch({type: 'TURN', dir: 1, player: 0});
-      //   break;
+      case 38:
+        // up
+        store.dispatch({ type: 'ACCELERATE' });
+        break;
+      case 37:
+        // left
+        store.dispatch({ type: 'TURN', dir: -1 });
+        break;
+      case 39:
+        // right
+        store.dispatch({ type: 'TURN', dir: 1 });
+        break;
     }
   };
 
   document.onkeyup = function (ev) {
-    switch (ev.keyCode) {}
+    switch (ev.keyCode) {
+      case 38:
+        // up
+        store.dispatch({ type: 'DEACCELERATE' });
+        break;
+      case 37:
+        // left
+        store.dispatch({ type: 'TURN', dir: 0 });
+        break;
+      case 39:
+        // right
+        store.dispatch({ type: 'TURN', dir: 0 });
+        break;
+    }
   };
 };
 
@@ -66,14 +92,17 @@ module.exports = { setControls: setControls };
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var _require = require('./settings'),
+var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
     VIEW_HEIGHT = _require.VIEW_HEIGHT;
+
+var _require2 = require('./makeEntity'),
+    make = _require2.make;
 
 var getInitialState = function getInitialState() {
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks())),
+    entities: [].concat(_toConsumableArray(seedBoks()), [make('truck', 50, 50), make('miner', 75, 75), make('factory', 400, 400)]),
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
@@ -81,32 +110,45 @@ var getInitialState = function getInitialState() {
       y: 0,
       dragging: false,
       dragStartX: 0,
-      dragStartY: 0,
-      prevWidth: VIEW_WIDTH,
-      prevHeight: VIEW_HEIGHT
+      dragStartY: 0
     }
   };
 };
 
 var seedBoks = function seedBoks() {
-  return [make('bok', 0, 0), make('bok', 0, 5), make('bok', 5, 0), make('bok', 10, 10), make('bok', 100, 100), make('bok', 200, 150), make('bok', 800, 500)];
+  var boks = [];
+  for (var x = -1000; x < 1000; x += 5) {
+    for (var y = -1000; y < 1000; y += 5) {
+      if (Math.sqrt(x * x + y * y) >= 200) {
+        boks.push(make('bok', x, y));
+      }
+    }
+  }
+  return boks;
 };
+
+module.exports = {
+  getInitialState: getInitialState
+};
+},{"../settings":12,"./makeEntity":3}],3:[function(require,module,exports){
+"use strict";
 
 var make = function make(type, x, y) {
   return {
     x: x, y: y,
     speed: 0, accel: 0,
     carrying: [],
-    theta: 0,
+    selected: false,
+    theta: Math.PI,
+    thetaSpeed: 0,
     type: type
   };
 };
 
 module.exports = {
-  getInitialState: getInitialState,
   make: make
 };
-},{"./settings":8}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var _require = require('redux'),
@@ -126,6 +168,7 @@ var _require4 = require('./controls'),
     setControls = _require4.setControls;
 
 var _require5 = require('./render/render'),
+    initCanvas = _require5.initCanvas,
     renderToCanvas = _require5.renderToCanvas;
 
 var store = createStore(rootReducer);
@@ -147,23 +190,114 @@ setControls(store, gameRunner);
 
 ReactDOM.render(React.createElement(Game, { store: store }), document.getElementById('container'));
 
+initCanvas();
 store.subscribe(function () {
   return renderToCanvas(store.getState());
 });
 gameRunner.interval = gameRunner.start(store);
-},{"./controls":1,"./reducers/rootReducer":4,"./render/render":7,"./settings":8,"./ui/Game.react":9,"react":21,"react-dom":18,"redux":22}],4:[function(require,module,exports){
+},{"./controls":1,"./reducers/rootReducer":6,"./render/render":9,"./settings":12,"./ui/Game.react":13,"react":26,"react-dom":23,"redux":27}],5:[function(require,module,exports){
+'use strict';
+
+var _require = require('../selectors'),
+    getSelectedEntities = _require.getSelectedEntities,
+    getWorldCoord = _require.getWorldCoord;
+
+var _require2 = require('../settings'),
+    TRUCK_WIDTH = _require2.TRUCK_WIDTH,
+    TRUCK_HEIGHT = _require2.TRUCK_HEIGHT,
+    TRUCK_TURN_SPEED = _require2.TRUCK_TURN_SPEED,
+    TRUCK_SPEED = _require2.TRUCK_SPEED,
+    TRUCK_ACCEL = _require2.TRUCK_ACCEL,
+    MINER_RADIUS = _require2.MINER_RADIUS,
+    MINER_TURN_SPEED = _require2.MINER_TURN_SPEED,
+    MINER_SPEED = _require2.MINER_SPEED,
+    MINER_ACCEL = _require2.MINER_ACCEL;
+
+var entityReducer = function entityReducer(state, action) {
+  switch (action.type) {
+    case 'MAYBE_SELECT':
+      deselectAll(state.entities);
+      maybeSelect(state.entities, getWorldCoord(action.x, action.y));
+      return state;
+    case 'ACCELERATE':
+      {
+        var selEntities = getSelectedEntities(state);
+        if (selEntities.length == 0) {
+          return state;
+        }
+        var entity = selEntities[0];
+        if (entity.type == 'truck') {
+          entity.accel = entity.speed < TRUCK_SPEED ? TRUCK_ACCEL : 0;
+        } else if (entity.type == 'miner') {
+          entity.accel = entity.speed < MINER_SPEED ? MINER_ACCEL : 0;
+        }
+        return state;
+      }
+    case 'DEACCELERATE':
+      {
+        var _selEntities = getSelectedEntities(state);
+        if (_selEntities.length == 0) {
+          return state;
+        }
+        var _entity = _selEntities[0];
+        if (_entity.type == 'truck') {
+          _entity.accel = _entity.speed > 0 ? -1 * TRUCK_ACCEL : 0;
+        } else if (_entity.type == 'miner') {
+          _entity.accel = _entity.speed > 0 ? -1 * MINER_ACCEL : 0;
+        }
+        return state;
+      }
+    case 'TURN':
+      {
+        var _selEntities2 = getSelectedEntities(state);
+        if (_selEntities2.length == 0) {
+          return state;
+        }
+        var _entity2 = _selEntities2[0];
+        if (_entity2.type == 'truck') {
+          _entity2.thetaSpeed = action.dir * TRUCK_TURN_SPEED;
+        } else if (_entity2.type == 'miner') {
+          _entity2.thetaSpeed = action.dir * MINER_TURN_SPEED;
+        }
+        return state;
+      }
+  }
+};
+
+var deselectAll = function deselectAll(entities) {
+  entities.forEach(function (entity) {
+    return entity.selected = false;
+  });
+};
+
+var maybeSelect = function maybeSelect(entities, worldCoord) {
+  entities.forEach(function (entity) {
+    // TODO
+    if (entity.type == 'truck') {
+      entity.selected = true;
+    }
+  });
+};
+
+module.exports = {
+  entityReducer: entityReducer
+};
+},{"../selectors":11,"../settings":12}],6:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _require = require('../entities'),
+var _require = require('../entities/initState'),
     getInitialState = _require.getInitialState;
 
-var _require2 = require('./tickReducer'),
-    tickReducer = _require2.tickReducer;
+var _require2 = require('./entityReducer'),
+    entityReducer = _require2.entityReducer;
 
-var _require3 = require('./viewReducer'),
-    viewReducer = _require3.viewReducer;
+var _require3 = require('./tickReducer'),
+    tickReducer = _require3.tickReducer;
+
+var _require4 = require('./viewReducer'),
+    viewReducer = _require4.viewReducer;
 
 var rootReducer = function rootReducer(state, action) {
   if (state === undefined) return getInitialState();
@@ -180,12 +314,17 @@ var rootReducer = function rootReducer(state, action) {
     case 'MOUSE_DOWN':
     case 'MOUSE_UP':
       return viewReducer(state, action);
+    case 'MAYBE_SELECT':
+    case 'ACCELERATE':
+    case 'DEACCELERATE':
+    case 'TURN':
+      return entityReducer(state, action);
   }
   return state;
 };
 
 module.exports = { rootReducer: rootReducer };
-},{"../entities":2,"./tickReducer":5,"./viewReducer":6}],5:[function(require,module,exports){
+},{"../entities/initState":2,"./entityReducer":5,"./tickReducer":7,"./viewReducer":8}],7:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -196,7 +335,11 @@ var _require = require('../settings'),
     TRUCK_HEIGHT = _require.TRUCK_HEIGHT,
     MINER_SPEED = _require.MINER_SPEED,
     MINER_RADIUS = _require.MINER_RADIUS,
-    BOK_SIze = _require.BOK_SIze;
+    BOK_SIZE = _require.BOK_SIZE,
+    FACTORY_SIZE = _require.FACTORY_SIZE;
+
+var _require2 = require('../utils'),
+    distance = _require2.distance;
 
 var tickReducer = function tickReducer(state, action) {
   return _extends({}, state, {
@@ -212,17 +355,18 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
 
   try {
     for (var _iterator = entities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var entity = _step.value;
+      var _entity = _step.value;
 
-      entity.speed += entity.accel;
-      if (entity.type == 'truck') {
-        entity.speed = entity.speed > TRUCK_SPEED ? TRUCK_SPEED : entity.speed;
-      } else if (entity.type == 'miner') {
-        entity.speed = entity.speed > MINER_SPEED ? MINER_SPEED : entity.speed;
+      _entity.speed += _entity.accel;
+      _entity.theta += _entity.thetaSpeed;
+      if (_entity.type == 'truck') {
+        _entity.speed = _entity.speed > TRUCK_SPEED ? TRUCK_SPEED : _entity.speed;
+      } else if (_entity.type == 'miner') {
+        _entity.speed = _entity.speed > MINER_SPEED ? MINER_SPEED : _entity.speed;
       }
-      entity.speed = entity.speed < 0 ? 0 : entity.speed; // NOTE: can't reverse
-      entity.x += -1 * Math.sin(entity.theta) * entity.speed;
-      entity.y += Math.cos(entity.theta) * entity.speed;
+      _entity.speed = _entity.speed < 0 ? 0 : _entity.speed; // NOTE: can't reverse
+      _entity.x += -1 * Math.sin(_entity.theta) * _entity.speed;
+      _entity.y += Math.cos(_entity.theta) * _entity.speed;
     }
 
     // Handle collisions with each other
@@ -241,40 +385,81 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
     }
   }
 
-  for (var i = 0; i < entities.length; i++) {
-    for (var j = i + 1; j < entities.length; j++) {
-      var entityA = entities[i];
-      var entityB = entities[j];
-      if (collided(entityA, entityB)) {
-        // TODO
+  var nonBokEntities = entities.filter(function (entity) {
+    return entity.type != 'bok';
+  });
+  // const bokEntities = entities.filter(entity => entity.type == 'bok');
+  var bokEntities = [];
+  for (var i = 0; i < nonBokEntities.length; i++) {
+    var entity = nonBokEntities[i];
+    for (var j = 0; j < bokEntities.length; j++) {
+      var bok = bokEntities[j];
+      if (collided(entity, bok)) {
+        // trucks destroy boks they hit
+        if (entity.type == 'truck') {
+          entity.speed /= 2;
+          bok.shouldDestroy = true;
+        }
+        // miners pick up boks they hit
+        if (entity.type == 'miner') {
+          bok.shouldDestroy = true;
+          entity.carrying = [bok];
+          entity.speed *= -1 * entity.speed;
+        }
       }
     }
+    // miners should drop off at trucks/factories they hit
+    // TODO
   }
 
-  return entities;
+  return entities.filter(function (entity) {
+    return !entity.shouldDestroy;
+  });
 };
 
 var collided = function collided(entityA, entityB) {
   if (entityA == entityB) {
     return false;
   }
-  return false;
   // naive -- circles only
-  // const radiusA = entityA.type == 'ball' ? entityA.radius : entityA.width / 2;
-  // const radiusB = entityB.type == 'ball' ? entityB.radius : entityB.width / 2;
-  // return distance(entityA, entityB) <= radiusA + radiusB;
-};
+  var radiusA = 0;
+  switch (entityA.type) {
+    case 'truck':
+      radiusA = TRUCK_WIDTH / 2;
+      break;
+    case 'miner':
+      radiusA = MINER_RADIUS;
+      break;
+    case 'bok':
+      radiusA = BOK_SIZE / 2;
+      break;
+    case 'factory':
+      radiusA = FACTORY_SIZE / 2;
+      break;
+  }
+  var radiusB = 0;
+  switch (entityB.type) {
+    case 'truck':
+      radiusB = TRUCK_WIDTH / 2;
+      break;
+    case 'miner':
+      radiusB = MINER_RADIUS;
+      break;
+    case 'bok':
+      radiusB = BOK_SIZE / 2;
+      break;
+    case 'factory':
+      radiusB = FACTORY_SIZE / 2;
+      break;
+  }
 
-var distance = function distance(entityA, entityB) {
-  var xDist = entityA.x - entityB.x;
-  var yDist = entityA.y - entityB.y;
-  return Math.sqrt(xDist * xDist + yDist * yDist);
+  return distance(entityA, entityB) <= radiusA + radiusB;
 };
 
 module.exports = {
   tickReducer: tickReducer
 };
-},{"../settings":8}],6:[function(require,module,exports){
+},{"../settings":12,"../utils":14}],8:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -284,8 +469,6 @@ var viewReducer = function viewReducer(state, action) {
     case 'ZOOM':
       return _extends({}, state, {
         view: _extends({}, state.view, {
-          prevWidth: state.view.width,
-          prevHeight: state.view.height,
           width: state.view.width + 12 * action.out,
           height: state.view.height + 9 * action.out
         })
@@ -322,14 +505,38 @@ var viewReducer = function viewReducer(state, action) {
 module.exports = {
   viewReducer: viewReducer
 };
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
     VIEW_HEIGHT = _require.VIEW_HEIGHT,
-    BOK_SIZE = _require.BOK_SIZE;
+    BACKGROUND_COLOR = _require.BACKGROUND_COLOR,
+    SELECT_COLOR = _require.SELECT_COLOR,
+    TRUCK_WIDTH = _require.TRUCK_WIDTH,
+    TRUCK_HEIGHT = _require.TRUCK_HEIGHT,
+    TRUCK_COLOR = _require.TRUCK_COLOR,
+    MINER_RADIUS = _require.MINER_RADIUS,
+    MINER_COLOR = _require.MINER_COLOR,
+    FACTORY_SIZE = _require.FACTORY_SIZE,
+    FACTORY_COLOR = _require.FACTORY_COLOR,
+    BOK_SIZE = _require.BOK_SIZE,
+    BOK_COLOR = _require.BOK_COLOR;
 
+var _require2 = require('./shapes'),
+    renderCircle = _require2.renderCircle,
+    renderRect = _require2.renderRect;
+
+var initCanvas = function initCanvas() {
+  var canvas = document.getElementById('canvas');
+  if (canvas == null) {
+    return;
+  }
+  canvas.width = VIEW_WIDTH;
+  canvas.height = VIEW_HEIGHT;
+};
+
+var renderedBok = false;
 var renderToCanvas = function renderToCanvas(state) {
   var view = state.view;
 
@@ -337,15 +544,14 @@ var renderToCanvas = function renderToCanvas(state) {
   if (canvas == null) {
     return;
   }
-  canvas.width = VIEW_WIDTH;
-  canvas.height = VIEW_HEIGHT;
   var ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#DEB887';
-  ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+  ctx.fillStyle = BACKGROUND_COLOR;
+  if (!renderedBok) {
+    ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+  }
 
   ctx.save();
-  // ctx.translate(view.x + VIEW_WIDTH / 2, view.y + VIEW_HEIGHT / 2);
   ctx.scale(VIEW_WIDTH / view.width, VIEW_HEIGHT / view.height);
   ctx.translate(view.x + view.width / 2, view.y + view.height / 2);
   var _iteratorNormalCompletion = true;
@@ -358,10 +564,19 @@ var renderToCanvas = function renderToCanvas(state) {
 
       switch (entity.type) {
         case 'bok':
-          renderBok(ctx, entity);
+          if (!renderedBok) {
+            renderBok(ctx, entity);
+          }
+          break;
         case 'truck':
+          renderTruck(ctx, entity);
+          break;
         case 'miner':
+          renderMiner(ctx, entity);
+          break;
         case 'factory':
+          renderFactory(ctx, entity);
+          break;
       }
     }
   } catch (err) {
@@ -379,7 +594,29 @@ var renderToCanvas = function renderToCanvas(state) {
     }
   }
 
+  renderedBok = true;
   ctx.restore();
+};
+
+var renderMiner = function renderMiner(ctx, entity) {
+  var x = entity.x,
+      y = entity.y;
+
+  if (entity.selected) {
+    renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
+  }
+  renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
+};
+
+var renderTruck = function renderTruck(ctx, entity) {
+  var x = entity.x,
+      y = entity.y,
+      theta = entity.theta;
+
+  if (entity.selected) {
+    renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
+  }
+  renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
 };
 
 var renderBok = function renderBok(ctx, entity) {
@@ -387,7 +624,46 @@ var renderBok = function renderBok(ctx, entity) {
       y = entity.y,
       theta = entity.theta;
 
-  renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, 'brown');
+  renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
+};
+
+var renderFactory = function renderFactory(ctx, entity) {
+  var x = entity.x,
+      y = entity.y,
+      theta = entity.theta;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(theta + Math.PI);
+  ctx.fillStyle = FACTORY_COLOR;
+  ctx.beginPath();
+  ctx.moveTo(-FACTORY_SIZE / 2, FACTORY_SIZE / 2);
+  ctx.lineTo(-FACTORY_SIZE / 2, -FACTORY_SIZE / 2); // left wall
+  ctx.lineTo(-FACTORY_SIZE / 4, -FACTORY_SIZE / 4); // first diagonal
+  ctx.lineTo(-FACTORY_SIZE / 4, -FACTORY_SIZE / 2);
+  ctx.lineTo(0, -FACTORY_SIZE / 4); // second diagonal
+  ctx.lineTo(0, -FACTORY_SIZE / 2);
+  ctx.lineTo(FACTORY_SIZE / 4, -FACTORY_SIZE / 4); // third diagonal
+  ctx.lineTo(FACTORY_SIZE / 4, -FACTORY_SIZE / 2);
+  ctx.lineTo(FACTORY_SIZE / 2, -FACTORY_SIZE / 4); // fourth diagonal
+  ctx.lineTo(FACTORY_SIZE / 2, FACTORY_SIZE / 2); // right wall
+  ctx.closePath(); // bottom
+  ctx.fill();
+  ctx.restore();
+};
+
+module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };
+},{"../settings":12,"./shapes":10}],10:[function(require,module,exports){
+"use strict";
+
+var renderCircle = function renderCircle(ctx, x, y, radius, color) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.translate(x, y);
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.restore();
 };
 
 var renderRect = function renderRect(ctx, x, y, theta, width, height, color) {
@@ -399,30 +675,62 @@ var renderRect = function renderRect(ctx, x, y, theta, width, height, color) {
   ctx.restore();
 };
 
-module.exports = { renderToCanvas: renderToCanvas };
-},{"../settings":8}],8:[function(require,module,exports){
-"use strict";
+module.exports = {
+  renderRect: renderRect,
+  renderCircle: renderCircle
+};
+},{}],11:[function(require,module,exports){
+'use strict';
+
+var getSelectedEntities = function getSelectedEntities(state) {
+  return state.entities.filter(function (entity) {
+    return entity.selected;
+  });
+};
+
+// convert given x, y in canvas coordinates to world coordinates based on the
+// view position
+
+
+var getWorldCoord = function getWorldCoord(state, x, y) {
+  // TODO
+};
 
 module.exports = {
-  TICK_TIME: 500,
-  WORLD_WIDTH: 1000,
-  WORLD_HEIGHT: 1000,
+  getSelectedEntities: getSelectedEntities,
+  getWorldCoord: getWorldCoord
+};
+},{}],12:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  TICK_TIME: 50,
+  BACKGROUND_COLOR: '#deb887',
+  SELECT_COLOR: 'red',
 
   VIEW_WIDTH: 800,
   VIEW_HEIGHT: 600,
 
-  MINER_SPEED: 5,
+  MINER_SPEED: 4,
   MINER_ACCEL: 1,
-  MINER_RADIUS: 10,
+  MINER_RADIUS: 5,
+  MINER_TURN_SPEED: 7 * Math.PI / 180,
+  MINER_COLOR: '#dcdcdc',
 
   TRUCK_SPEED: 7,
   TRUCK_ACCEL: 0.5,
-  TRUCK_WIDTH: 20,
-  TRUCK_HEIGHT: 40,
+  TRUCK_WIDTH: 30,
+  TRUCK_HEIGHT: 50,
+  TRUCK_TURN_SPEED: 7 * Math.PI / 180,
+  TRUCK_COLOR: 'lightgray',
 
-  BOK_SIZE: 5
+  BOK_SIZE: 5,
+  BOK_COLOR: 'brown',
+
+  FACTORY_SIZE: 200,
+  FACTORY_COLOR: '#696969'
 };
-},{}],9:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -483,7 +791,180 @@ var Game = function (_React$Component) {
 }(React.Component);
 
 module.exports = Game;
-},{"React":12}],10:[function(require,module,exports){
+},{"React":17}],14:[function(require,module,exports){
+'use strict';
+
+var floor = Math.floor,
+    sqrt = Math.sqrt,
+    random = Math.random,
+    round = Math.round;
+
+///////////////////////////////////////////////////////////////////////
+// Stochastic
+///////////////////////////////////////////////////////////////////////
+
+var shamefulGaussian = function shamefulGaussian() {
+  return (random() + random() + random() + random() + random() + random() - 3) / 3;
+};
+
+var randomIn = function randomIn(min, max) {
+  return floor(min + random() * (max - min + 1));
+};
+
+var normalIn = function normalIn(min, max) {
+  var gaussian = shamefulGaussian();
+  return floor(min + gaussian * (max - min + 1));
+};
+
+var oneOf = function oneOf(options) {
+  return options[floor(random() * options.length)];
+};
+
+var e = 2.718281828459;
+
+///////////////////////////////////////////////////////////////////////
+// Math around Zero
+///////////////////////////////////////////////////////////////////////
+
+var maybeMinus = function maybeMinus(a, b) {
+  return a > b ? a - b : a;
+};
+var orZero = function orZero(a) {
+  return a > 0 ? a : 0;
+};
+var minusToZero = function minusToZero(a, b) {
+  return a - b > 0 ? a - b : 0;
+};
+
+///////////////////////////////////////////////////////////////////////
+// Spatial
+///////////////////////////////////////////////////////////////////////
+
+var distance = function distance(coordA, coordB) {
+  var zA = coordA.z || 0;
+  var zB = coordB.z || 0;
+  var zDist = zA - zB;
+  var yDist = coordA.y - coordB.y;
+  var xDist = coordA.x - coordB.x;
+  return sqrt(xDist * xDist + yDist * yDist + zDist * zDist);
+};
+
+///////////////////////////////////////////////////////////////////////
+// Vectors
+///////////////////////////////////////////////////////////////////////
+
+var dotProduct = function dotProduct(vecA, vecB) {
+  if (vecA.z != null && vecB.z != null) {
+    return vecA.x * vecB.x + vecA.y * vecB.y + vecA.z * vecB.z;
+  }
+  return vecA.x * vecB.x + vecA.y * vecB.y;
+};
+
+// in radians
+var angleToVec = function angleToVec(theta, scalar) {
+  return {
+    x: -1 * Math.sin(theta) * scalar,
+    y: Math.cos(theta) * scalar
+  };
+};
+
+// in radians
+var vecToAngle = function vecToAngle(vector) {
+  var theta = Math.atan(vector.y / vector.x);
+  if (vector.x < 0 && vector.y < 0) {
+    return theta + Math.PI;
+  }
+  if (vector.x < 0 && vector.y > 0) {
+    return theta + Math.PI;
+  }
+  return theta;
+};
+
+// for bouncing something off an inner wall
+// @arg entity: {x: number, y: number, radius: number, theta: Radian}
+// @return boolean whether there was a bounce
+var bounce = function bounce(entity, width, height) {
+  var vec = angleToVec(entity.theta, entity.speed);
+  if (entity.x + entity.radius >= width || entity.x - entity.radius <= 0) {
+    vec.x *= -1;
+    entity.theta = vecToAngle(vec);
+    return true;
+  }
+  if (entity.y + entity.radius >= height || entity.y - entity.radius <= 0) {
+    console.log(entity.bounceCount);
+    console.log('bounce', vec, entity.theta * 180 / Math.PI);
+    vec.y *= -1;
+    entity.theta = vecToAngle(vec);
+    console.log('bounce out', vec, entity.theta * 180 / Math.PI);
+    return true;
+  }
+  return false;
+};
+
+///////////////////////////////////////////////////////////////////////
+// Arrays and Matrices
+///////////////////////////////////////////////////////////////////////
+
+var initArray = function initArray(len, fn) {
+  if (!fn) {
+    fn = function fn() {
+      return null;
+    };
+  }
+  var array = [];
+  for (var i = 0; i < len; i++) {
+    array.push(fn(i));
+  }
+  return array;
+};
+
+var initMatrix = function initMatrix(width, len, fn) {
+  return initArray(width, function () {
+    return initArray(len, fn);
+  });
+};
+
+var getCol = function getCol(matrix, col) {
+  var colToReturn = [];
+  for (var x = 0; x < matrix.length; x++) {
+    colToReturn.push(matrix[x][col]);
+  }
+  return colToReturn;
+};
+
+var forEach = function forEach(obj, keyValFunc) {
+  for (var key in obj) {
+    keyValFunc(key, obj[key]);
+  }
+};
+
+var forEachMatrix = function forEachMatrix(matrix, fn) {
+  for (var x = 0; x < matrix.length; x++) {
+    for (var y = 0; y < matrix[x].length; y++) {
+      fn(matrix[x][y], x, y, matrix);
+    }
+  }
+};
+
+module.exports = {
+  e: e,
+  initArray: initArray,
+  initMatrix: initMatrix,
+  forEach: forEach,
+  forEachMatrix: forEachMatrix,
+  normalIn: normalIn,
+  oneOf: oneOf,
+  randomIn: randomIn,
+  minusToZero: minusToZero,
+  maybeMinus: maybeMinus,
+  orZero: orZero,
+  dotProduct: dotProduct,
+  vecToAngle: vecToAngle,
+  angleToVec: angleToVec,
+  bounce: bounce,
+  distance: distance
+};
+},{}],15:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -2327,7 +2808,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":31,"object-assign":13,"prop-types/checkPropTypes":14}],11:[function(require,module,exports){
+},{"_process":36,"object-assign":18,"prop-types/checkPropTypes":19}],16:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -2353,7 +2834,7 @@ _currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.P
 if(null!=b){void 0!==b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.3",
 __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":13}],12:[function(require,module,exports){
+},{"object-assign":18}],17:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2364,7 +2845,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":10,"./cjs/react.production.min.js":11,"_process":31}],13:[function(require,module,exports){
+},{"./cjs/react.development.js":15,"./cjs/react.production.min.js":16,"_process":36}],18:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -2456,7 +2937,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -2551,7 +3032,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":15,"_process":31}],15:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":20,"_process":36}],20:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2565,7 +3046,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],16:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react-dom.development.js
@@ -22296,7 +22777,7 @@ module.exports = reactDom;
 }
 
 }).call(this,require('_process'))
-},{"_process":31,"object-assign":13,"prop-types/checkPropTypes":14,"react":21,"scheduler":27,"scheduler/tracing":28}],17:[function(require,module,exports){
+},{"_process":36,"object-assign":18,"prop-types/checkPropTypes":19,"react":26,"scheduler":32,"scheduler/tracing":33}],22:[function(require,module,exports){
 /** @license React v16.6.1
  * react-dom.production.min.js
  *
@@ -22547,7 +23028,7 @@ void 0:t("40");return a._reactRootContainer?(Oh(function(){$h(null,null,a,!1,fun
 Ka,La,Ca.injectEventPluginsByName,qa,Ra,function(a){za(a,Qa)},Ib,Jb,Jd,Ea]},unstable_createRoot:function(a,b){Yh(a)?void 0:t("299","unstable_createRoot");return new Xh(a,!0,null!=b&&!0===b.hydrate)}};(function(a){var b=a.findFiberByHostInstance;return Ve(n({},a,{findHostInstanceByFiber:function(a){a=nd(a);return null===a?null:a.stateNode},findFiberByHostInstance:function(a){return b?b(a):null}}))})({findFiberByHostInstance:Ia,bundleType:0,version:"16.6.3",rendererPackageName:"react-dom"});
 var ei={default:bi},fi=ei&&bi||ei;module.exports=fi.default||fi;
 
-},{"object-assign":13,"react":21,"scheduler":27}],18:[function(require,module,exports){
+},{"object-assign":18,"react":26,"scheduler":32}],23:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -22589,13 +23070,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":16,"./cjs/react-dom.production.min.js":17,"_process":31}],19:[function(require,module,exports){
-arguments[4][10][0].apply(exports,arguments)
-},{"_process":31,"dup":10,"object-assign":13,"prop-types/checkPropTypes":14}],20:[function(require,module,exports){
-arguments[4][11][0].apply(exports,arguments)
-},{"dup":11,"object-assign":13}],21:[function(require,module,exports){
-arguments[4][12][0].apply(exports,arguments)
-},{"./cjs/react.development.js":19,"./cjs/react.production.min.js":20,"_process":31,"dup":12}],22:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":21,"./cjs/react-dom.production.min.js":22,"_process":36}],24:[function(require,module,exports){
+arguments[4][15][0].apply(exports,arguments)
+},{"_process":36,"dup":15,"object-assign":18,"prop-types/checkPropTypes":19}],25:[function(require,module,exports){
+arguments[4][16][0].apply(exports,arguments)
+},{"dup":16,"object-assign":18}],26:[function(require,module,exports){
+arguments[4][17][0].apply(exports,arguments)
+},{"./cjs/react.development.js":24,"./cjs/react.production.min.js":25,"_process":36,"dup":17}],27:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23246,7 +23727,7 @@ exports.compose = compose;
 exports.__DO_NOT_USE__ActionTypes = ActionTypes;
 
 }).call(this,require('_process'))
-},{"_process":31,"symbol-observable":29}],23:[function(require,module,exports){
+},{"_process":36,"symbol-observable":34}],28:[function(require,module,exports){
 (function (process){
 /** @license React v0.11.3
  * scheduler-tracing.development.js
@@ -23670,7 +24151,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 }
 
 }).call(this,require('_process'))
-},{"_process":31}],24:[function(require,module,exports){
+},{"_process":36}],29:[function(require,module,exports){
 /** @license React v0.11.3
  * scheduler-tracing.production.min.js
  *
@@ -23682,7 +24163,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 
 'use strict';Object.defineProperty(exports,"__esModule",{value:!0});var b=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.unstable_clear=function(a){return a()};exports.unstable_getCurrent=function(){return null};exports.unstable_getThreadID=function(){return++b};exports.unstable_trace=function(a,d,c){return c()};exports.unstable_wrap=function(a){return a};exports.unstable_subscribe=function(){};exports.unstable_unsubscribe=function(){};
 
-},{}],25:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (process,global){
 /** @license React v0.11.3
  * scheduler.development.js
@@ -24320,7 +24801,7 @@ exports.unstable_shouldYield = unstable_shouldYield;
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":31}],26:[function(require,module,exports){
+},{"_process":36}],31:[function(require,module,exports){
 (function (global){
 /** @license React v0.11.3
  * scheduler.production.min.js
@@ -24345,7 +24826,7 @@ b=c.previous;b.next=c.previous=a;a.next=c;a.previous=b}return a};exports.unstabl
 exports.unstable_shouldYield=function(){return!f&&(null!==d&&d.expirationTime<l||w())};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],27:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24356,7 +24837,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":25,"./cjs/scheduler.production.min.js":26,"_process":31}],28:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":30,"./cjs/scheduler.production.min.js":31,"_process":36}],33:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24367,7 +24848,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler-tracing.development.js":23,"./cjs/scheduler-tracing.production.min.js":24,"_process":31}],29:[function(require,module,exports){
+},{"./cjs/scheduler-tracing.development.js":28,"./cjs/scheduler-tracing.production.min.js":29,"_process":36}],34:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -24399,7 +24880,7 @@ if (typeof self !== 'undefined') {
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ponyfill.js":30}],30:[function(require,module,exports){
+},{"./ponyfill.js":35}],35:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -24423,7 +24904,7 @@ function symbolObservablePonyfill(root) {
 
 	return result;
 };
-},{}],31:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -24609,4 +25090,4 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}]},{},[3]);
+},{}]},{},[4]);

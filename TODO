@@ -1,0 +1,15 @@
+
+ - - - - - - TODO - - - - - -
+ - panning while zoomed in moves the view more than 1-to-1
+ - write selector to convert canvas coord to world coord
+ - detect what was clicked on when selecting
+ - seed function for bok initial positions
+ - miners should drop off at trucks/factories (and turn around?)
+ - render which direction trucks/miners are facing
+ - only re-render boks when they change (pan/zoom)
+ - use a lookup table for collisions with boks instead of comparing to each
+ - zoom can save canvas to bitmap and zoom the image instead of re-rendering everything
+
+
+ - - - - - - DONE - - - - - -
+ - detect collisions

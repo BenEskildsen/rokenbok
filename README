@@ -6,10 +6,12 @@ files in js get babelified into bin and then browser-side-required into bundle.j
 
 run with
  > python -m SimpleHTTPServer
+or
+ > npm start
 and then go to localhost:8000 in the browser
 
 clone with
- > cp -rf 1vs0/ NEWGAME
+ > cp -rf Rokenbok/ NEWGAME
  > sudo rm -rf node_modules
  > cp template.bash
 installs this project's node dependencies

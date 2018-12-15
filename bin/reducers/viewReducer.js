@@ -7,8 +7,6 @@ var viewReducer = function viewReducer(state, action) {
     case 'ZOOM':
       return _extends({}, state, {
         view: _extends({}, state.view, {
-          prevWidth: state.view.width,
-          prevHeight: state.view.height,
           width: state.view.width + 12 * action.out,
           height: state.view.height + 9 * action.out
         })

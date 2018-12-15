@@ -1,6 +1,7 @@
 'use strict';
 
 var floor = Math.floor,
+    sqrt = Math.sqrt,
     random = Math.random,
     round = Math.round;
 
@@ -39,6 +40,19 @@ var orZero = function orZero(a) {
 };
 var minusToZero = function minusToZero(a, b) {
   return a - b > 0 ? a - b : 0;
+};
+
+///////////////////////////////////////////////////////////////////////
+// Spatial
+///////////////////////////////////////////////////////////////////////
+
+var distance = function distance(coordA, coordB) {
+  var zA = coordA.z || 0;
+  var zB = coordB.z || 0;
+  var zDist = zA - zB;
+  var yDist = coordA.y - coordB.y;
+  var xDist = coordA.x - coordB.x;
+  return sqrt(xDist * xDist + yDist * yDist + zDist * zDist);
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -153,5 +167,6 @@ module.exports = {
   dotProduct: dotProduct,
   vecToAngle: vecToAngle,
   angleToVec: angleToVec,
-  bounce: bounce
+  bounce: bounce,
+  distance: distance
 };

@@ -5,7 +5,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const {TICK_TIME} = require('./settings');
 const {setControls} = require('./controls');
-const {renderToCanvas} = require('./render/render');
+const {initCanvas, renderToCanvas} = require('./render/render');
 
 const store = createStore(rootReducer);
 window.store = store; // useful for debugging
@@ -23,5 +23,6 @@ ReactDOM.render(
   document.getElementById('container'),
 );
 
+initCanvas();
 store.subscribe(() => renderToCanvas(store.getState()));
 gameRunner.interval = gameRunner.start(store);

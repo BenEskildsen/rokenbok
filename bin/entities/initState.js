@@ -2,9 +2,12 @@
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var _require = require('./settings'),
+var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
     VIEW_HEIGHT = _require.VIEW_HEIGHT;
+
+var _require2 = require('./makeEntity'),
+    make = _require2.make;
 
 var getInitialState = function getInitialState() {
   return {
@@ -23,22 +26,17 @@ var getInitialState = function getInitialState() {
 };
 
 var seedBoks = function seedBoks() {
-  return [make('bok', 0, 0), make('bok', 0, 5), make('bok', 5, 0), make('bok', 10, 10), make('bok', 100, 100), make('bok', 800, 500)];
-};
-
-var make = function make(type, x, y) {
-  return {
-    x: x, y: y,
-    speed: 0, accel: 0,
-    carrying: [],
-    selected: false,
-    theta: Math.PI,
-    thetaSpeed: 0,
-    type: type
-  };
+  var boks = [];
+  for (var x = -1000; x < 1000; x += 5) {
+    for (var y = -1000; y < 1000; y += 5) {
+      if (Math.sqrt(x * x + y * y) >= 200) {
+        boks.push(make('bok', x, y));
+      }
+    }
+  }
+  return boks;
 };
 
 module.exports = {
-  getInitialState: getInitialState,
-  make: make
+  getInitialState: getInitialState
 };

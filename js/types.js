@@ -3,10 +3,12 @@
 export type Entity = {
   type: 'bok' | 'truck' | 'miner' | 'factory';
   carrying: Array<Entity>;
+  selected: boolean,
   x: number,
   y: number,
   speed: number,
   accel: number,
+  thetaSpeed: number,
   theta: number,
 };
 

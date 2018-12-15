@@ -1,4 +1,4 @@
-const {floor, random, round} = Math;
+const {floor, sqrt, random, round} = Math;
 
 ///////////////////////////////////////////////////////////////////////
 // Stochastic
@@ -24,6 +24,19 @@ const e = 2.718281828459;
 const maybeMinus = (a, b) => a > b ? a - b : a;
 const orZero = (a) => a > 0 ? a : 0;
 const minusToZero = (a, b) => a - b > 0 ? a - b : 0;
+
+///////////////////////////////////////////////////////////////////////
+// Spatial
+///////////////////////////////////////////////////////////////////////
+
+const distance = (coordA, coordB) => {
+  const zA = coordA.z || 0;
+  const zB = coordB.z || 0;
+  const zDist = zA - zB;
+  const yDist = coordA.y - coordB.y;
+  const xDist = coordA.x - coordB.x;
+  return sqrt(xDist * xDist + yDist * yDist + zDist * zDist);
+}
 
 ///////////////////////////////////////////////////////////////////////
 // Vectors
@@ -134,4 +147,5 @@ module.exports = {
   vecToAngle,
   angleToVec,
   bounce,
+  distance,
 };

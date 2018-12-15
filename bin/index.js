@@ -17,6 +17,7 @@ var _require4 = require('./controls'),
     setControls = _require4.setControls;
 
 var _require5 = require('./render/render'),
+    initCanvas = _require5.initCanvas,
     renderToCanvas = _require5.renderToCanvas;
 
 var store = createStore(rootReducer);
@@ -38,6 +39,7 @@ setControls(store, gameRunner);
 
 ReactDOM.render(React.createElement(Game, { store: store }), document.getElementById('container'));
 
+initCanvas();
 store.subscribe(function () {
   return renderToCanvas(store.getState());
 });

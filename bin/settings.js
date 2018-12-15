@@ -1,21 +1,29 @@
-"use strict";
+'use strict';
 
 module.exports = {
-  TICK_TIME: 500,
-  WORLD_WIDTH: 1000,
-  WORLD_HEIGHT: 1000,
+  TICK_TIME: 50,
+  BACKGROUND_COLOR: '#deb887',
+  SELECT_COLOR: 'red',
 
   VIEW_WIDTH: 800,
   VIEW_HEIGHT: 600,
 
-  MINER_SPEED: 5,
+  MINER_SPEED: 4,
   MINER_ACCEL: 1,
-  MINER_RADIUS: 10,
+  MINER_RADIUS: 5,
+  MINER_TURN_SPEED: 7 * Math.PI / 180,
+  MINER_COLOR: '#dcdcdc',
 
   TRUCK_SPEED: 7,
   TRUCK_ACCEL: 0.5,
-  TRUCK_WIDTH: 20,
-  TRUCK_HEIGHT: 40,
+  TRUCK_WIDTH: 30,
+  TRUCK_HEIGHT: 50,
+  TRUCK_TURN_SPEED: 7 * Math.PI / 180,
+  TRUCK_COLOR: 'lightgray',
 
-  BOK_SIZE: 5
+  BOK_SIZE: 5,
+  BOK_COLOR: 'brown',
+
+  FACTORY_SIZE: 200,
+  FACTORY_COLOR: '#696969'
 };

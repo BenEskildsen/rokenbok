@@ -2,13 +2,17 @@
 
 const {
   VIEW_WIDTH, VIEW_HEIGHT
-} = require('./settings');
+} = require('../settings');
+const {make} = require('./makeEntity');
 
 const getInitialState = (): State => {
   return {
     running: true,
     entities: [
       ...seedBoks(),
+      make('truck', 50, 50),
+      make('miner', 75, 75),
+      make('factory', 400, 400),
     ],
     view: {
       width: VIEW_WIDTH,
@@ -23,28 +27,17 @@ const getInitialState = (): State => {
 };
 
 const seedBoks = () => {
-  return [
-    make('bok', 0, 0),
-    make('bok', 0, 5),
-    make('bok', 5, 0),
-    make('bok', 10, 10),
-    make('bok', 100, 100),
-    make('bok', 200, 150),
-    make('bok', 800, 500),
-  ];
+  const boks = [];
+  for (let x = -1000; x < 1000; x+=5) {
+    for (let y = -1000; y < 1000; y+=5) {
+      if (Math.sqrt(x * x + y * y) >= 200) {
+        boks.push(make('bok', x, y));
+      }
+    }
+  }
+  return boks;
 };
-
-const make = (type, x, y) => {
-  return {
-    x, y,
-    speed: 0, accel: 0,
-    carrying: [],
-    theta: 0,
-    type,
-  };
-}
 
 module.exports = {
   getInitialState,
-  make,
 }
