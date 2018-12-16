@@ -9,7 +9,8 @@ var _require = require('../settings'),
     MINER_SPEED = _require.MINER_SPEED,
     MINER_RADIUS = _require.MINER_RADIUS,
     BOK_SIZE = _require.BOK_SIZE,
-    FACTORY_SIZE = _require.FACTORY_SIZE;
+    FACTORY_SIZE = _require.FACTORY_SIZE,
+    BASE_RADIUS = _require.BASE_RADIUS;
 
 var _require2 = require('../utils'),
     distance = _require2.distance;
@@ -60,7 +61,7 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
       _entity.y += Math.cos(_entity.theta) * _entity.speed;
     }
 
-    // Handle collisions with each other
+    // Handle bok collisions
   } catch (err) {
     _didIteratorError = true;
     _iteratorError = err;
@@ -93,13 +94,65 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
         if (entity.type == 'miner') {
           bok.shouldDestroy = true;
           entity.carrying = [bok];
-          console.log(entity);
           entity.speed *= -1 * entity.speed;
         }
       }
     }
-    // miners should drop off at trucks/factories they hit
-    // TODO
+  }
+
+  // Handle miner collisions
+  var minerEntities = entities.filter(function (entity) {
+    return entity.type == 'miner';
+  });
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = minerEntities[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var minerEntity = _step2.value;
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
+
+      try {
+        for (var _iterator3 = entities[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var _entity2 = _step3.value;
+
+          // Give boks to base/factory/truck
+          if (_entity2.type.match(/^(base|factory|truck)$/) && collided(minerEntity, _entity2)) {
+            _entity2.carrying = _entity2.carrying.concat(minerEntity.carrying);
+            minerEntity.carrying = [];
+          }
+        }
+      } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion3 && _iterator3.return) {
+            _iterator3.return();
+          }
+        } finally {
+          if (_didIteratorError3) {
+            throw _iteratorError3;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+        _iterator2.return();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
+      }
+    }
   }
 
   return entities.filter(function (entity) {
@@ -126,6 +179,9 @@ var collided = function collided(entityA, entityB) {
     case 'factory':
       radiusA = FACTORY_SIZE / 2;
       break;
+    case 'base':
+      radiusA = BASE_RADIUS / 2;
+      break;
   }
   var radiusB = 0;
   switch (entityB.type) {
@@ -140,6 +196,9 @@ var collided = function collided(entityA, entityB) {
       break;
     case 'factory':
       radiusB = FACTORY_SIZE / 2;
+      break;
+    case 'base':
+      radiusB = BASE_RADIUS / 2;
       break;
   }
 

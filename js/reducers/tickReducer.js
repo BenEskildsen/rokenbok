@@ -8,6 +8,7 @@ const {
   MINER_RADIUS,
   BOK_SIZE,
   FACTORY_SIZE,
+  BASE_RADIUS,
 } = require('../settings');
 const {distance} = require('../utils');
 
@@ -50,7 +51,7 @@ const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
     entity.y += Math.cos(entity.theta) * entity.speed;
   }
 
-  // Handle collisions with each other
+  // Handle bok collisions
   const bokEntities = entities.filter(entity => entity.type == 'bok');
   for (let i = 0; i < nonBokEntities.length; i++) {
     const entity = nonBokEntities[i];
@@ -70,9 +71,18 @@ const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
         }
       }
     }
-    // miners should drop off at trucks/factories they hit
-    // TODO
-
+  }
+  
+  // Handle miner collisions
+  const minerEntities = entities.filter(entity => entity.type == 'miner');
+  for (const minerEntity of minerEntities) {
+    for (const entity of entities) {
+      // Give boks to base/factory/truck
+      if (entity.type.match(/^(base|factory|truck)$/) && collided(minerEntity, entity)) {
+        entity.carrying = entity.carrying.concat(minerEntity.carrying);
+        minerEntity.carrying = [];
+      }
+    }
   }
 
   return entities.filter(entity => !entity.shouldDestroy);
@@ -97,6 +107,9 @@ const collided = (entityA: Entity, entityB: Entity): boolean => {
     case 'factory':
       radiusA = FACTORY_SIZE / 2;
       break;
+    case 'base':
+      radiusA = BASE_RADIUS / 2;
+      break;
   }
   let radiusB = 0;
   switch (entityB.type) {
@@ -111,6 +124,9 @@ const collided = (entityA: Entity, entityB: Entity): boolean => {
       break;
     case 'factory':
       radiusB = FACTORY_SIZE / 2;
+      break;
+    case 'base':
+      radiusB = BASE_RADIUS / 2;
       break;
   }
 
