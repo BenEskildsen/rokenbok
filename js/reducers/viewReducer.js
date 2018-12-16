@@ -9,6 +9,7 @@ const viewReducer = (state: State, action: Action): State => {
           ...state.view,
           width: state.view.width + (12 * action.out),
           height: state.view.height + (9 * action.out),
+          shouldRender: true,
         },
       };
     case 'MOUSE_MOVE':
@@ -23,6 +24,7 @@ const viewReducer = (state: State, action: Action): State => {
           y: state.view.y + action.y - state.view.dragStartY,
           dragStartX: action.x,
           dragStartY: action.y,
+          shouldRender: true,
         },
       }
     case 'MOUSE_DOWN':

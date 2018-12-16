@@ -5,8 +5,11 @@ const make = (type, x, y) => {
     carrying: [],
     selected: false,
     theta: Math.PI,
+    prevTheta: Math.PI,
     thetaSpeed: 0,
     type,
+    prevX: x,
+    prevY: y,
   };
 }
 

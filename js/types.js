@@ -9,7 +9,10 @@ export type Entity = {
   speed: number,
   accel: number,
   thetaSpeed: number,
-  theta: number,
+  theta: number, // radians
+  prevTheta: number,
+  prevX: number,
+  prevY: number,
 };
 
 export type State = {
@@ -23,5 +26,6 @@ export type State = {
     dragging: boolean,
     dragStartX: number,
     dragStartY: number,
+    shouldRender: boolean,
   },
 };

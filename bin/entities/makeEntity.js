@@ -7,8 +7,11 @@ var make = function make(type, x, y) {
     carrying: [],
     selected: false,
     theta: Math.PI,
+    prevTheta: Math.PI,
     thetaSpeed: 0,
-    type: type
+    type: type,
+    prevX: x,
+    prevY: y
   };
 };
 

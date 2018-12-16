@@ -8,7 +8,8 @@ var viewReducer = function viewReducer(state, action) {
       return _extends({}, state, {
         view: _extends({}, state.view, {
           width: state.view.width + 12 * action.out,
-          height: state.view.height + 9 * action.out
+          height: state.view.height + 9 * action.out,
+          shouldRender: true
         })
       });
     case 'MOUSE_MOVE':
@@ -20,7 +21,8 @@ var viewReducer = function viewReducer(state, action) {
           x: state.view.x + action.x - state.view.dragStartX,
           y: state.view.y + action.y - state.view.dragStartY,
           dragStartX: action.x,
-          dragStartY: action.y
+          dragStartY: action.y,
+          shouldRender: true
         })
       });
     case 'MOUSE_DOWN':

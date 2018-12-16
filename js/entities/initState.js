@@ -22,6 +22,7 @@ const getInitialState = (): State => {
       dragging: false,
       dragStartX: 0,
       dragStartY: 0,
+      shouldRender: true,
     }
   };
 };

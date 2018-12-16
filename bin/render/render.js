@@ -28,7 +28,6 @@ var initCanvas = function initCanvas() {
   canvas.height = VIEW_HEIGHT;
 };
 
-var renderedBok = false;
 var renderToCanvas = function renderToCanvas(state) {
   var view = state.view;
 
@@ -38,8 +37,8 @@ var renderToCanvas = function renderToCanvas(state) {
   }
   var ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = BACKGROUND_COLOR;
-  if (!renderedBok) {
+  if (view.shouldRender) {
+    ctx.fillStyle = BACKGROUND_COLOR;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
   }
 
@@ -56,7 +55,7 @@ var renderToCanvas = function renderToCanvas(state) {
 
       switch (entity.type) {
         case 'bok':
-          if (!renderedBok) {
+          if (view.shouldRender) {
             renderBok(ctx, entity);
           }
           break;
@@ -71,6 +70,9 @@ var renderToCanvas = function renderToCanvas(state) {
           break;
       }
     }
+    // shhh this is a side-effect on the state so that I can change the state without
+    // causing yet-another-re-render. This flag only exists to try to not render more
+    // than needed
   } catch (err) {
     _didIteratorError = true;
     _iteratorError = err;
@@ -86,16 +88,22 @@ var renderToCanvas = function renderToCanvas(state) {
     }
   }
 
-  renderedBok = true;
+  view.shouldRender = false;
   ctx.restore();
 };
 
 var renderMiner = function renderMiner(ctx, entity) {
   var x = entity.x,
-      y = entity.y;
+      y = entity.y,
+      prevX = entity.prevX,
+      prevY = entity.prevY;
 
   if (entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
     renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS, BACKGROUND_COLOR);
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
 };
@@ -103,10 +111,17 @@ var renderMiner = function renderMiner(ctx, entity) {
 var renderTruck = function renderTruck(ctx, entity) {
   var x = entity.x,
       y = entity.y,
-      theta = entity.theta;
+      theta = entity.theta,
+      prevX = entity.prevX,
+      prevY = entity.prevY,
+      prevTheta = entity.prevTheta;
 
   if (entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
     renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH, TRUCK_HEIGHT, BACKGROUND_COLOR);
   }
   renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
 };

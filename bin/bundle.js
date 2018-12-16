@@ -110,7 +110,8 @@ var getInitialState = function getInitialState() {
       y: 0,
       dragging: false,
       dragStartX: 0,
-      dragStartY: 0
+      dragStartY: 0,
+      shouldRender: true
     }
   };
 };
@@ -140,8 +141,11 @@ var make = function make(type, x, y) {
     carrying: [],
     selected: false,
     theta: Math.PI,
+    prevTheta: Math.PI,
     thetaSpeed: 0,
-    type: type
+    type: type,
+    prevX: x,
+    prevY: y
   };
 };
 
@@ -349,15 +353,19 @@ var tickReducer = function tickReducer(state, action) {
 
 var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) {
   // Update speeds and positions
+  var nonBokEntities = entities.filter(function (entity) {
+    return entity.type != 'bok';
+  });
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = entities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = nonBokEntities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var _entity = _step.value;
 
       _entity.speed += _entity.accel;
+      _entity.prevTheta = _entity.theta;
       _entity.theta += _entity.thetaSpeed;
       if (_entity.type == 'truck') {
         _entity.speed = _entity.speed > TRUCK_SPEED ? TRUCK_SPEED : _entity.speed;
@@ -365,6 +373,8 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
         _entity.speed = _entity.speed > MINER_SPEED ? MINER_SPEED : _entity.speed;
       }
       _entity.speed = _entity.speed < 0 ? 0 : _entity.speed; // NOTE: can't reverse
+      _entity.prevX = _entity.x;
+      _entity.prevY = _entity.y;
       _entity.x += -1 * Math.sin(_entity.theta) * _entity.speed;
       _entity.y += Math.cos(_entity.theta) * _entity.speed;
     }
@@ -385,11 +395,9 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
     }
   }
 
-  var nonBokEntities = entities.filter(function (entity) {
-    return entity.type != 'bok';
+  var bokEntities = entities.filter(function (entity) {
+    return entity.type == 'bok';
   });
-  // const bokEntities = entities.filter(entity => entity.type == 'bok');
-  var bokEntities = [];
   for (var i = 0; i < nonBokEntities.length; i++) {
     var entity = nonBokEntities[i];
     for (var j = 0; j < bokEntities.length; j++) {
@@ -470,7 +478,8 @@ var viewReducer = function viewReducer(state, action) {
       return _extends({}, state, {
         view: _extends({}, state.view, {
           width: state.view.width + 12 * action.out,
-          height: state.view.height + 9 * action.out
+          height: state.view.height + 9 * action.out,
+          shouldRender: true
         })
       });
     case 'MOUSE_MOVE':
@@ -482,7 +491,8 @@ var viewReducer = function viewReducer(state, action) {
           x: state.view.x + action.x - state.view.dragStartX,
           y: state.view.y + action.y - state.view.dragStartY,
           dragStartX: action.x,
-          dragStartY: action.y
+          dragStartY: action.y,
+          shouldRender: true
         })
       });
     case 'MOUSE_DOWN':
@@ -536,7 +546,6 @@ var initCanvas = function initCanvas() {
   canvas.height = VIEW_HEIGHT;
 };
 
-var renderedBok = false;
 var renderToCanvas = function renderToCanvas(state) {
   var view = state.view;
 
@@ -546,8 +555,8 @@ var renderToCanvas = function renderToCanvas(state) {
   }
   var ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = BACKGROUND_COLOR;
-  if (!renderedBok) {
+  if (view.shouldRender) {
+    ctx.fillStyle = BACKGROUND_COLOR;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
   }
 
@@ -564,7 +573,7 @@ var renderToCanvas = function renderToCanvas(state) {
 
       switch (entity.type) {
         case 'bok':
-          if (!renderedBok) {
+          if (view.shouldRender) {
             renderBok(ctx, entity);
           }
           break;
@@ -579,6 +588,9 @@ var renderToCanvas = function renderToCanvas(state) {
           break;
       }
     }
+    // shhh this is a side-effect on the state so that I can change the state without
+    // causing yet-another-re-render. This flag only exists to try to not render more
+    // than needed
   } catch (err) {
     _didIteratorError = true;
     _iteratorError = err;
@@ -594,16 +606,22 @@ var renderToCanvas = function renderToCanvas(state) {
     }
   }
 
-  renderedBok = true;
+  view.shouldRender = false;
   ctx.restore();
 };
 
 var renderMiner = function renderMiner(ctx, entity) {
   var x = entity.x,
-      y = entity.y;
+      y = entity.y,
+      prevX = entity.prevX,
+      prevY = entity.prevY;
 
   if (entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
     renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS, BACKGROUND_COLOR);
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
 };
@@ -611,10 +629,17 @@ var renderMiner = function renderMiner(ctx, entity) {
 var renderTruck = function renderTruck(ctx, entity) {
   var x = entity.x,
       y = entity.y,
-      theta = entity.theta;
+      theta = entity.theta,
+      prevX = entity.prevX,
+      prevY = entity.prevY,
+      prevTheta = entity.prevTheta;
 
   if (entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
     renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH, TRUCK_HEIGHT, BACKGROUND_COLOR);
   }
   renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
 };

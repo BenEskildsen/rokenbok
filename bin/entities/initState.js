@@ -20,7 +20,8 @@ var getInitialState = function getInitialState() {
       y: 0,
       dragging: false,
       dragStartX: 0,
-      dragStartY: 0
+      dragStartY: 0,
+      shouldRender: true
     }
   };
 };

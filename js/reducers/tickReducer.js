@@ -20,8 +20,10 @@ const tickReducer = (state: State, action: Action): State => {
 
 const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
   // Update speeds and positions
-  for (const entity of entities) {
+  const nonBokEntities = entities.filter(entity => entity.type != 'bok');
+  for (const entity of nonBokEntities) {
     entity.speed += entity.accel;
+    entity.prevTheta = entity.theta;
     entity.theta += entity.thetaSpeed;
     if (entity.type == 'truck') {
       entity.speed = entity.speed > TRUCK_SPEED ? TRUCK_SPEED : entity.speed;
@@ -29,14 +31,14 @@ const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
       entity.speed = entity.speed > MINER_SPEED ? MINER_SPEED : entity.speed;
     }
     entity.speed = entity.speed < 0 ? 0 : entity.speed; // NOTE: can't reverse
+    entity.prevX = entity.x;
+    entity.prevY = entity.y;
     entity.x += -1 * Math.sin(entity.theta) * entity.speed;
     entity.y += Math.cos(entity.theta) * entity.speed;
   }
 
   // Handle collisions with each other
-  const nonBokEntities = entities.filter(entity => entity.type != 'bok');
-  // const bokEntities = entities.filter(entity => entity.type == 'bok');
-  const bokEntities = [];
+  const bokEntities = entities.filter(entity => entity.type == 'bok');
   for (let i = 0; i < nonBokEntities.length; i++) {
     const entity = nonBokEntities[i];
     for (let j = 0; j < bokEntities.length; j++) {

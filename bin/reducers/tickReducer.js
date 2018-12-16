@@ -22,15 +22,19 @@ var tickReducer = function tickReducer(state, action) {
 
 var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) {
   // Update speeds and positions
+  var nonBokEntities = entities.filter(function (entity) {
+    return entity.type != 'bok';
+  });
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = entities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = nonBokEntities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var _entity = _step.value;
 
       _entity.speed += _entity.accel;
+      _entity.prevTheta = _entity.theta;
       _entity.theta += _entity.thetaSpeed;
       if (_entity.type == 'truck') {
         _entity.speed = _entity.speed > TRUCK_SPEED ? TRUCK_SPEED : _entity.speed;
@@ -38,6 +42,8 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
         _entity.speed = _entity.speed > MINER_SPEED ? MINER_SPEED : _entity.speed;
       }
       _entity.speed = _entity.speed < 0 ? 0 : _entity.speed; // NOTE: can't reverse
+      _entity.prevX = _entity.x;
+      _entity.prevY = _entity.y;
       _entity.x += -1 * Math.sin(_entity.theta) * _entity.speed;
       _entity.y += Math.cos(_entity.theta) * _entity.speed;
     }
@@ -58,11 +64,9 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
     }
   }
 
-  var nonBokEntities = entities.filter(function (entity) {
-    return entity.type != 'bok';
+  var bokEntities = entities.filter(function (entity) {
+    return entity.type == 'bok';
   });
-  // const bokEntities = entities.filter(entity => entity.type == 'bok');
-  var bokEntities = [];
   for (var i = 0; i < nonBokEntities.length; i++) {
     var entity = nonBokEntities[i];
     for (var j = 0; j < bokEntities.length; j++) {

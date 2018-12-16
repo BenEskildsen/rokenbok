@@ -17,7 +17,6 @@ const initCanvas = () => {
   canvas.height = VIEW_HEIGHT;
 };
 
-let shouldRerender = false;
 const renderToCanvas = (state) => {
   const {view} = state;
   const canvas = document.getElementById('canvas');
@@ -26,8 +25,8 @@ const renderToCanvas = (state) => {
   }
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = BACKGROUND_COLOR;
-  if (!shouldRerender) {
+  if (view.shouldRender) {
+    ctx.fillStyle = BACKGROUND_COLOR;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
   }
 
@@ -37,7 +36,7 @@ const renderToCanvas = (state) => {
   for (const entity of state.entities) {
     switch (entity.type) {
       case 'bok':
-        if (!shouldRerender) {
+        if (view.shouldRender) {
           renderBok(ctx, entity);
         }
         break;
@@ -52,22 +51,33 @@ const renderToCanvas = (state) => {
         break;
     }
   }
-  shouldRerender = true;
+  // shhh this is a side-effect on the state so that I can change the state without
+  // causing yet-another-re-render. This flag only exists to try to not render more
+  // than needed
+  view.shouldRender = false;
   ctx.restore();
 };
 
 const renderMiner = (ctx, entity) => {
-  const {x, y} = entity;
+  const {x, y, prevX, prevY} = entity;
   if (entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
     renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS, BACKGROUND_COLOR);
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
 };
 
 const renderTruck = (ctx, entity) => {
-  const {x, y, theta} = entity;
+  const {x, y, theta, prevX, prevY, prevTheta} = entity;
   if (entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
     renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH, TRUCK_HEIGHT, BACKGROUND_COLOR);
   }
   renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
 };
