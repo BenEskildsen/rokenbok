@@ -13,7 +13,7 @@ and then go to localhost:8000 in the browser
 clone with
  > cp -rf Rokenbok/ NEWGAME
  > sudo rm -rf node_modules
- > cp template.bash
+ > ./template.bash
 installs this project's node dependencies
 make sure you have a
   .babelrc

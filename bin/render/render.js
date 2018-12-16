@@ -5,13 +5,6 @@ var _require = require('../settings'),
     VIEW_HEIGHT = _require.VIEW_HEIGHT,
     BACKGROUND_COLOR = _require.BACKGROUND_COLOR,
     SELECT_COLOR = _require.SELECT_COLOR,
-    TRUCK_WIDTH = _require.TRUCK_WIDTH,
-    TRUCK_HEIGHT = _require.TRUCK_HEIGHT,
-    TRUCK_COLOR = _require.TRUCK_COLOR,
-    MINER_RADIUS = _require.MINER_RADIUS,
-    MINER_COLOR = _require.MINER_COLOR,
-    FACTORY_SIZE = _require.FACTORY_SIZE,
-    FACTORY_COLOR = _require.FACTORY_COLOR,
     BOK_SIZE = _require.BOK_SIZE,
     BOK_COLOR = _require.BOK_COLOR;
 
@@ -19,9 +12,14 @@ var _require2 = require('./shapes'),
     renderCircle = _require2.renderCircle,
     renderRect = _require2.renderRect;
 
-var _require3 = require('../selectors'),
-    getWorldCoord = _require3.getWorldCoord,
-    getCanvasCoord = _require3.getCanvasCoord;
+var _require3 = require('./renderMiner'),
+    renderMiner = _require3.renderMiner;
+
+var _require4 = require('./renderTruck'),
+    renderTruck = _require4.renderTruck;
+
+var _require5 = require('./renderFactory'),
+    renderFactory = _require5.renderFactory;
 
 var initCanvas = function initCanvas() {
   var canvas = document.getElementById('canvas');
@@ -44,8 +42,6 @@ var renderToCanvas = function renderToCanvas(state) {
   if (view.shouldRender) {
     ctx.fillStyle = BACKGROUND_COLOR;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-
-    console.log({ x: view.width / 2, y: view.height / 2 }, getWorldCoord(state, view.width / 2, view.height / 2));
   }
 
   ctx.save();
@@ -54,6 +50,7 @@ var renderToCanvas = function renderToCanvas(state) {
   if (view.image) {
     ctx.drawImage(view.image, -view.imgX - view.imgWidth / 2, -view.imgY - view.imgHeight / 2, view.imgWidth, view.imgHeight);
     ctx.restore();
+    // see comment below
     view.shouldRender = false;
     return;
   }
@@ -82,7 +79,6 @@ var renderToCanvas = function renderToCanvas(state) {
           break;
       }
     }
-
     // shhh this is a side-effect on the state so that I can change the state without
     // causing yet-another-re-render. This flag only exists to try to not render more
     // than needed
@@ -105,71 +101,12 @@ var renderToCanvas = function renderToCanvas(state) {
   ctx.restore();
 };
 
-var renderMiner = function renderMiner(ctx, entity) {
-  var x = entity.x,
-      y = entity.y,
-      prevX = entity.prevX,
-      prevY = entity.prevY;
-
-  if (entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
-    renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
-  }
-  if (!entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
-  }
-  renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
-};
-
-var renderTruck = function renderTruck(ctx, entity) {
-  var x = entity.x,
-      y = entity.y,
-      theta = entity.theta,
-      prevX = entity.prevX,
-      prevY = entity.prevY,
-      prevTheta = entity.prevTheta;
-
-  if (entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
-    renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
-  }
-  if (!entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
-  }
-  renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
-};
-
 var renderBok = function renderBok(ctx, entity) {
   var x = entity.x,
       y = entity.y,
       theta = entity.theta;
 
   renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
-};
-
-var renderFactory = function renderFactory(ctx, entity) {
-  var x = entity.x,
-      y = entity.y,
-      theta = entity.theta;
-
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(theta + Math.PI);
-  ctx.fillStyle = FACTORY_COLOR;
-  ctx.beginPath();
-  ctx.moveTo(-FACTORY_SIZE / 2, FACTORY_SIZE / 2);
-  ctx.lineTo(-FACTORY_SIZE / 2, -FACTORY_SIZE / 2); // left wall
-  ctx.lineTo(-FACTORY_SIZE / 4, -FACTORY_SIZE / 4); // first diagonal
-  ctx.lineTo(-FACTORY_SIZE / 4, -FACTORY_SIZE / 2);
-  ctx.lineTo(0, -FACTORY_SIZE / 4); // second diagonal
-  ctx.lineTo(0, -FACTORY_SIZE / 2);
-  ctx.lineTo(FACTORY_SIZE / 4, -FACTORY_SIZE / 4); // third diagonal
-  ctx.lineTo(FACTORY_SIZE / 4, -FACTORY_SIZE / 2);
-  ctx.lineTo(FACTORY_SIZE / 2, -FACTORY_SIZE / 4); // fourth diagonal
-  ctx.lineTo(FACTORY_SIZE / 2, FACTORY_SIZE / 2); // right wall
-  ctx.closePath(); // bottom
-  ctx.fill();
-  ctx.restore();
 };
 
 module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };

@@ -1,12 +1,12 @@
 const {
   VIEW_WIDTH, VIEW_HEIGHT,
   BACKGROUND_COLOR, SELECT_COLOR,
-  TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR,
-  MINER_RADIUS, MINER_COLOR,
-  FACTORY_SIZE, FACTORY_COLOR,
   BOK_SIZE, BOK_COLOR,
 } = require('../settings');
 const {renderCircle, renderRect} = require('./shapes');
+const {renderMiner} = require('./renderMiner');
+const {renderTruck} = require('./renderTruck');
+const {renderFactory} = require('./renderFactory');
 
 const initCanvas = () => {
   const canvas = document.getElementById('canvas');
@@ -34,8 +34,15 @@ const renderToCanvas = (state) => {
   ctx.scale(VIEW_WIDTH / view.width, VIEW_HEIGHT / view.height);
   ctx.translate(view.x + view.width / 2, view.y + view.height / 2);
   if (view.image) {
-    ctx.drawImage(view.image, -view.imgX-view.imgWidth/2, -view.imgY-view.imgHeight/2, view.imgWidth, view.imgHeight);
+    ctx.drawImage(
+      view.image,
+      -view.imgX - view.imgWidth/2,
+      -view.imgY - view.imgHeight/2,
+      view.imgWidth,
+      view.imgHeight,
+    );
     ctx.restore();
+    // see comment below
     view.shouldRender = false;
     return;
   }
@@ -64,55 +71,9 @@ const renderToCanvas = (state) => {
   ctx.restore();
 };
 
-const renderMiner = (ctx, entity) => {
-  const {x, y, prevX, prevY} = entity;
-  if (entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
-    renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
-  }
-  if (!entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
-  }
-  renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
-};
-
-const renderTruck = (ctx, entity) => {
-  const {x, y, theta, prevX, prevY, prevTheta} = entity;
-  if (entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
-    renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
-  }
-  if (!entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
-  }
-  renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
-};
-
 const renderBok = (ctx, entity) => {
   const {x, y, theta} = entity;
   renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
-};
-
-const renderFactory = (ctx, entity) => {
-  const {x, y, theta} = entity;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(theta + Math.PI);
-  ctx.fillStyle = FACTORY_COLOR;
-  ctx.beginPath();
-  ctx.moveTo(-FACTORY_SIZE / 2, FACTORY_SIZE / 2);
-  ctx.lineTo(-FACTORY_SIZE / 2, -FACTORY_SIZE / 2); // left wall
-  ctx.lineTo(-FACTORY_SIZE / 4, -FACTORY_SIZE / 4); // first diagonal
-  ctx.lineTo(-FACTORY_SIZE / 4, -FACTORY_SIZE / 2);
-  ctx.lineTo(0, -FACTORY_SIZE / 4); // second diagonal
-  ctx.lineTo(0, -FACTORY_SIZE / 2);
-  ctx.lineTo(FACTORY_SIZE / 4, -FACTORY_SIZE / 4); // third diagonal
-  ctx.lineTo(FACTORY_SIZE / 4, -FACTORY_SIZE / 2);
-  ctx.lineTo(FACTORY_SIZE / 2, -FACTORY_SIZE / 4); // fourth diagonal
-  ctx.lineTo(FACTORY_SIZE / 2, FACTORY_SIZE / 2); // right wall
-  ctx.closePath(); // bottom
-  ctx.fill();
-  ctx.restore();
 };
 
 module.exports = {renderToCanvas, initCanvas};

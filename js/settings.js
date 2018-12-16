@@ -2,6 +2,7 @@
 
 module.exports = {
   TICK_TIME     : 50,
+  ZOOM_DEBOUNCE : 4, // number of ticks before removing image and rendering entities again
   BACKGROUND_COLOR: '#deb887',
   SELECT_COLOR  : 'red',
 
@@ -20,6 +21,7 @@ module.exports = {
   TRUCK_HEIGHT  : 50,
   TRUCK_TURN_SPEED: 7 * Math.PI / 180,
   TRUCK_COLOR   : 'lightgray',
+  CAB_COLOR     : '#2f4f4f',
 
   BOK_SIZE      : 5,
   BOK_COLOR     : 'brown',

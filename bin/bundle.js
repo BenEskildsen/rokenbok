@@ -133,7 +133,7 @@ var seedBoks = function seedBoks() {
 module.exports = {
   getInitialState: getInitialState
 };
-},{"../settings":12,"./makeEntity":3}],3:[function(require,module,exports){
+},{"../settings":15,"./makeEntity":3}],3:[function(require,module,exports){
 "use strict";
 
 var make = function make(type, x, y) {
@@ -201,7 +201,7 @@ store.subscribe(function () {
   return renderToCanvas(store.getState());
 });
 gameRunner.interval = gameRunner.start(store);
-},{"./controls":1,"./reducers/rootReducer":6,"./render/render":9,"./settings":12,"./ui/Game.react":13,"react":26,"react-dom":23,"redux":27}],5:[function(require,module,exports){
+},{"./controls":1,"./reducers/rootReducer":6,"./render/render":9,"./settings":15,"./ui/Game.react":16,"react":29,"react-dom":26,"redux":30}],5:[function(require,module,exports){
 'use strict';
 
 var _require = require('../selectors'),
@@ -307,7 +307,7 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 module.exports = {
   entityReducer: entityReducer
 };
-},{"../selectors":11,"../settings":12,"../utils":14}],6:[function(require,module,exports){
+},{"../selectors":14,"../settings":15,"../utils":17}],6:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -500,14 +500,15 @@ var collided = function collided(entityA, entityB) {
 module.exports = {
   tickReducer: tickReducer
 };
-},{"../settings":12,"../utils":14}],8:[function(require,module,exports){
+},{"../settings":15,"../utils":17}],8:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
-    VIEW_HEIGHT = _require.VIEW_HEIGHT;
+    VIEW_HEIGHT = _require.VIEW_HEIGHT,
+    ZOOM_DEBOUNCE = _require.ZOOM_DEBOUNCE;
 
 var viewReducer = function viewReducer(state, action) {
   switch (action.type) {
@@ -531,7 +532,7 @@ var viewReducer = function viewReducer(state, action) {
             imgY: image == null ? state.view.imgY : state.view.y,
             imgWidth: image != null ? nextWidth : state.view.imgWidth,
             imgHeight: image != null ? nextHeight : state.view.imgHeight,
-            imgCount: 5
+            imgCount: ZOOM_DEBOUNCE
           })
         });
       }
@@ -560,7 +561,7 @@ var viewReducer = function viewReducer(state, action) {
             imgY: _image == null ? state.view.imgY : nextY,
             imgWidth: _image != null ? state.view.width : state.view.imgWidth,
             imgHeight: _image != null ? state.view.height : state.view.imgHeight,
-            imgCount: 5
+            imgCount: ZOOM_DEBOUNCE
           })
         });
       }
@@ -584,7 +585,7 @@ var viewReducer = function viewReducer(state, action) {
 module.exports = {
   viewReducer: viewReducer
 };
-},{"../settings":12}],9:[function(require,module,exports){
+},{"../settings":15}],9:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -592,13 +593,6 @@ var _require = require('../settings'),
     VIEW_HEIGHT = _require.VIEW_HEIGHT,
     BACKGROUND_COLOR = _require.BACKGROUND_COLOR,
     SELECT_COLOR = _require.SELECT_COLOR,
-    TRUCK_WIDTH = _require.TRUCK_WIDTH,
-    TRUCK_HEIGHT = _require.TRUCK_HEIGHT,
-    TRUCK_COLOR = _require.TRUCK_COLOR,
-    MINER_RADIUS = _require.MINER_RADIUS,
-    MINER_COLOR = _require.MINER_COLOR,
-    FACTORY_SIZE = _require.FACTORY_SIZE,
-    FACTORY_COLOR = _require.FACTORY_COLOR,
     BOK_SIZE = _require.BOK_SIZE,
     BOK_COLOR = _require.BOK_COLOR;
 
@@ -606,9 +600,14 @@ var _require2 = require('./shapes'),
     renderCircle = _require2.renderCircle,
     renderRect = _require2.renderRect;
 
-var _require3 = require('../selectors'),
-    getWorldCoord = _require3.getWorldCoord,
-    getCanvasCoord = _require3.getCanvasCoord;
+var _require3 = require('./renderMiner'),
+    renderMiner = _require3.renderMiner;
+
+var _require4 = require('./renderTruck'),
+    renderTruck = _require4.renderTruck;
+
+var _require5 = require('./renderFactory'),
+    renderFactory = _require5.renderFactory;
 
 var initCanvas = function initCanvas() {
   var canvas = document.getElementById('canvas');
@@ -631,8 +630,6 @@ var renderToCanvas = function renderToCanvas(state) {
   if (view.shouldRender) {
     ctx.fillStyle = BACKGROUND_COLOR;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-
-    console.log({ x: view.width / 2, y: view.height / 2 }, getWorldCoord(state, view.width / 2, view.height / 2));
   }
 
   ctx.save();
@@ -641,6 +638,7 @@ var renderToCanvas = function renderToCanvas(state) {
   if (view.image) {
     ctx.drawImage(view.image, -view.imgX - view.imgWidth / 2, -view.imgY - view.imgHeight / 2, view.imgWidth, view.imgHeight);
     ctx.restore();
+    // see comment below
     view.shouldRender = false;
     return;
   }
@@ -669,7 +667,6 @@ var renderToCanvas = function renderToCanvas(state) {
           break;
       }
     }
-
     // shhh this is a side-effect on the state so that I can change the state without
     // causing yet-another-re-render. This flag only exists to try to not render more
     // than needed
@@ -692,40 +689,6 @@ var renderToCanvas = function renderToCanvas(state) {
   ctx.restore();
 };
 
-var renderMiner = function renderMiner(ctx, entity) {
-  var x = entity.x,
-      y = entity.y,
-      prevX = entity.prevX,
-      prevY = entity.prevY;
-
-  if (entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
-    renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
-  }
-  if (!entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
-  }
-  renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
-};
-
-var renderTruck = function renderTruck(ctx, entity) {
-  var x = entity.x,
-      y = entity.y,
-      theta = entity.theta,
-      prevX = entity.prevX,
-      prevY = entity.prevY,
-      prevTheta = entity.prevTheta;
-
-  if (entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
-    renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
-  }
-  if (!entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
-  }
-  renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
-};
-
 var renderBok = function renderBok(ctx, entity) {
   var x = entity.x,
       y = entity.y,
@@ -733,6 +696,14 @@ var renderBok = function renderBok(ctx, entity) {
 
   renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
 };
+
+module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };
+},{"../settings":15,"./renderFactory":10,"./renderMiner":11,"./renderTruck":12,"./shapes":13}],10:[function(require,module,exports){
+'use strict';
+
+var _require = require('../settings'),
+    FACTORY_SIZE = _require.FACTORY_SIZE,
+    FACTORY_COLOR = _require.FACTORY_COLOR;
 
 var renderFactory = function renderFactory(ctx, entity) {
   var x = entity.x,
@@ -759,8 +730,87 @@ var renderFactory = function renderFactory(ctx, entity) {
   ctx.restore();
 };
 
-module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };
-},{"../selectors":11,"../settings":12,"./shapes":10}],10:[function(require,module,exports){
+module.exports = { renderFactory: renderFactory };
+},{"../settings":15}],11:[function(require,module,exports){
+'use strict';
+
+var _require = require('./shapes'),
+    renderCircle = _require.renderCircle;
+
+var _require2 = require('../settings'),
+    MINER_RADIUS = _require2.MINER_RADIUS,
+    MINER_COLOR = _require2.MINER_COLOR,
+    BACKGROUND_COLOR = _require2.BACKGROUND_COLOR,
+    SELECT_COLOR = _require2.SELECT_COLOR;
+
+var renderMiner = function renderMiner(ctx, entity) {
+  var x = entity.x,
+      y = entity.y,
+      theta = entity.theta,
+      prevX = entity.prevX,
+      prevY = entity.prevY;
+
+  if (entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
+    renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
+  }
+  renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
+  // render pointer
+  ctx.save();
+  ctx.strokeStyle = 'black';
+  ctx.translate(x, y);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(Math.sin(-theta) * MINER_RADIUS, Math.cos(theta) * MINER_RADIUS);
+  ctx.stroke();
+  ctx.restore();
+};
+
+module.exports = { renderMiner: renderMiner };
+},{"../settings":15,"./shapes":13}],12:[function(require,module,exports){
+'use strict';
+
+var _require = require('./shapes'),
+    renderRect = _require.renderRect;
+
+var _require2 = require('../settings'),
+    TRUCK_WIDTH = _require2.TRUCK_WIDTH,
+    TRUCK_HEIGHT = _require2.TRUCK_HEIGHT,
+    TRUCK_COLOR = _require2.TRUCK_COLOR,
+    CAB_COLOR = _require2.CAB_COLOR,
+    BACKGROUND_COLOR = _require2.BACKGROUND_COLOR,
+    SELECT_COLOR = _require2.SELECT_COLOR;
+
+var renderTruck = function renderTruck(ctx, entity) {
+  var x = entity.x,
+      y = entity.y,
+      theta = entity.theta,
+      prevX = entity.prevX,
+      prevY = entity.prevY,
+      prevTheta = entity.prevTheta;
+
+  if (entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
+    renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
+  }
+  if (!entity.selected) {
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
+  }
+  renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
+  // render cab
+  ctx.save();
+  ctx.fillStyle = CAB_COLOR;
+  ctx.translate(x, y);
+  ctx.rotate(theta);
+  ctx.fillRect(-TRUCK_WIDTH / 2, TRUCK_HEIGHT / 6, TRUCK_WIDTH, TRUCK_HEIGHT / 3);
+  ctx.restore();
+};
+
+module.exports = { renderTruck: renderTruck };
+},{"../settings":15,"./shapes":13}],13:[function(require,module,exports){
 "use strict";
 
 var renderCircle = function renderCircle(ctx, x, y, radius, color) {
@@ -786,7 +836,7 @@ module.exports = {
   renderRect: renderRect,
   renderCircle: renderCircle
 };
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 var _require = require('./settings'),
@@ -804,10 +854,6 @@ var getSelectedEntities = function getSelectedEntities(state) {
 var getWorldCoord = function getWorldCoord(state, x, y) {
   var view = state.view;
 
-  console.log({ x: Math.round(x), y: Math.round(y) }, ' => ', {
-    x: (x - VIEW_WIDTH / 2) * view.width / VIEW_WIDTH - view.x,
-    y: (y - VIEW_HEIGHT / 2) * view.height / VIEW_HEIGHT - view.y
-  });
   return {
     x: (x - VIEW_WIDTH / 2) * view.width / VIEW_WIDTH - view.x,
     y: (y - VIEW_HEIGHT / 2) * view.height / VIEW_HEIGHT - view.y
@@ -818,11 +864,12 @@ module.exports = {
   getSelectedEntities: getSelectedEntities,
   getWorldCoord: getWorldCoord
 };
-},{"./settings":12}],12:[function(require,module,exports){
+},{"./settings":15}],15:[function(require,module,exports){
 'use strict';
 
 module.exports = {
   TICK_TIME: 50,
+  ZOOM_DEBOUNCE: 4, // number of ticks before removing image and rendering entities again
   BACKGROUND_COLOR: '#deb887',
   SELECT_COLOR: 'red',
 
@@ -841,6 +888,7 @@ module.exports = {
   TRUCK_HEIGHT: 50,
   TRUCK_TURN_SPEED: 7 * Math.PI / 180,
   TRUCK_COLOR: 'lightgray',
+  CAB_COLOR: '#2f4f4f',
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',
@@ -848,7 +896,7 @@ module.exports = {
   FACTORY_SIZE: 200,
   FACTORY_COLOR: '#696969'
 };
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -909,7 +957,7 @@ var Game = function (_React$Component) {
 }(React.Component);
 
 module.exports = Game;
-},{"React":17}],14:[function(require,module,exports){
+},{"React":20}],17:[function(require,module,exports){
 'use strict';
 
 var floor = Math.floor,
@@ -1082,7 +1130,7 @@ module.exports = {
   bounce: bounce,
   distance: distance
 };
-},{}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -2926,7 +2974,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":36,"object-assign":18,"prop-types/checkPropTypes":19}],16:[function(require,module,exports){
+},{"_process":39,"object-assign":21,"prop-types/checkPropTypes":22}],19:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -2952,7 +3000,7 @@ _currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.P
 if(null!=b){void 0!==b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.3",
 __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":18}],17:[function(require,module,exports){
+},{"object-assign":21}],20:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2963,7 +3011,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":15,"./cjs/react.production.min.js":16,"_process":36}],18:[function(require,module,exports){
+},{"./cjs/react.development.js":18,"./cjs/react.production.min.js":19,"_process":39}],21:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -3055,7 +3103,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3150,7 +3198,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":20,"_process":36}],20:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":23,"_process":39}],23:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3164,7 +3212,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],21:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react-dom.development.js
@@ -22895,7 +22943,7 @@ module.exports = reactDom;
 }
 
 }).call(this,require('_process'))
-},{"_process":36,"object-assign":18,"prop-types/checkPropTypes":19,"react":26,"scheduler":32,"scheduler/tracing":33}],22:[function(require,module,exports){
+},{"_process":39,"object-assign":21,"prop-types/checkPropTypes":22,"react":29,"scheduler":35,"scheduler/tracing":36}],25:[function(require,module,exports){
 /** @license React v16.6.1
  * react-dom.production.min.js
  *
@@ -23146,7 +23194,7 @@ void 0:t("40");return a._reactRootContainer?(Oh(function(){$h(null,null,a,!1,fun
 Ka,La,Ca.injectEventPluginsByName,qa,Ra,function(a){za(a,Qa)},Ib,Jb,Jd,Ea]},unstable_createRoot:function(a,b){Yh(a)?void 0:t("299","unstable_createRoot");return new Xh(a,!0,null!=b&&!0===b.hydrate)}};(function(a){var b=a.findFiberByHostInstance;return Ve(n({},a,{findHostInstanceByFiber:function(a){a=nd(a);return null===a?null:a.stateNode},findFiberByHostInstance:function(a){return b?b(a):null}}))})({findFiberByHostInstance:Ia,bundleType:0,version:"16.6.3",rendererPackageName:"react-dom"});
 var ei={default:bi},fi=ei&&bi||ei;module.exports=fi.default||fi;
 
-},{"object-assign":18,"react":26,"scheduler":32}],23:[function(require,module,exports){
+},{"object-assign":21,"react":29,"scheduler":35}],26:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23188,13 +23236,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":21,"./cjs/react-dom.production.min.js":22,"_process":36}],24:[function(require,module,exports){
-arguments[4][15][0].apply(exports,arguments)
-},{"_process":36,"dup":15,"object-assign":18,"prop-types/checkPropTypes":19}],25:[function(require,module,exports){
-arguments[4][16][0].apply(exports,arguments)
-},{"dup":16,"object-assign":18}],26:[function(require,module,exports){
-arguments[4][17][0].apply(exports,arguments)
-},{"./cjs/react.development.js":24,"./cjs/react.production.min.js":25,"_process":36,"dup":17}],27:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":24,"./cjs/react-dom.production.min.js":25,"_process":39}],27:[function(require,module,exports){
+arguments[4][18][0].apply(exports,arguments)
+},{"_process":39,"dup":18,"object-assign":21,"prop-types/checkPropTypes":22}],28:[function(require,module,exports){
+arguments[4][19][0].apply(exports,arguments)
+},{"dup":19,"object-assign":21}],29:[function(require,module,exports){
+arguments[4][20][0].apply(exports,arguments)
+},{"./cjs/react.development.js":27,"./cjs/react.production.min.js":28,"_process":39,"dup":20}],30:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23845,7 +23893,7 @@ exports.compose = compose;
 exports.__DO_NOT_USE__ActionTypes = ActionTypes;
 
 }).call(this,require('_process'))
-},{"_process":36,"symbol-observable":34}],28:[function(require,module,exports){
+},{"_process":39,"symbol-observable":37}],31:[function(require,module,exports){
 (function (process){
 /** @license React v0.11.3
  * scheduler-tracing.development.js
@@ -24269,7 +24317,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 }
 
 }).call(this,require('_process'))
-},{"_process":36}],29:[function(require,module,exports){
+},{"_process":39}],32:[function(require,module,exports){
 /** @license React v0.11.3
  * scheduler-tracing.production.min.js
  *
@@ -24281,7 +24329,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 
 'use strict';Object.defineProperty(exports,"__esModule",{value:!0});var b=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.unstable_clear=function(a){return a()};exports.unstable_getCurrent=function(){return null};exports.unstable_getThreadID=function(){return++b};exports.unstable_trace=function(a,d,c){return c()};exports.unstable_wrap=function(a){return a};exports.unstable_subscribe=function(){};exports.unstable_unsubscribe=function(){};
 
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 (function (process,global){
 /** @license React v0.11.3
  * scheduler.development.js
@@ -24919,7 +24967,7 @@ exports.unstable_shouldYield = unstable_shouldYield;
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":36}],31:[function(require,module,exports){
+},{"_process":39}],34:[function(require,module,exports){
 (function (global){
 /** @license React v0.11.3
  * scheduler.production.min.js
@@ -24944,7 +24992,7 @@ b=c.previous;b.next=c.previous=a;a.next=c;a.previous=b}return a};exports.unstabl
 exports.unstable_shouldYield=function(){return!f&&(null!==d&&d.expirationTime<l||w())};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24955,7 +25003,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":30,"./cjs/scheduler.production.min.js":31,"_process":36}],33:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":33,"./cjs/scheduler.production.min.js":34,"_process":39}],36:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24966,7 +25014,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler-tracing.development.js":28,"./cjs/scheduler-tracing.production.min.js":29,"_process":36}],34:[function(require,module,exports){
+},{"./cjs/scheduler-tracing.development.js":31,"./cjs/scheduler-tracing.production.min.js":32,"_process":39}],37:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -24998,7 +25046,7 @@ if (typeof self !== 'undefined') {
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ponyfill.js":35}],35:[function(require,module,exports){
+},{"./ponyfill.js":38}],38:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25022,7 +25070,7 @@ function symbolObservablePonyfill(root) {
 
 	return result;
 };
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 

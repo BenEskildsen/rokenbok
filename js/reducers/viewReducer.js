@@ -1,6 +1,6 @@
 // @flow
 
-const {VIEW_WIDTH, VIEW_HEIGHT} = require('../settings');
+const {VIEW_WIDTH, VIEW_HEIGHT, ZOOM_DEBOUNCE} = require('../settings');
 
 
 const viewReducer = (state: State, action: Action): State => {
@@ -26,7 +26,7 @@ const viewReducer = (state: State, action: Action): State => {
           imgY: image == null ? state.view.imgY : state.view.y,
           imgWidth: image != null ? nextWidth : state.view.imgWidth,
           imgHeight: image != null ? nextHeight : state.view.imgHeight,
-          imgCount: 5,
+          imgCount: ZOOM_DEBOUNCE,
         },
       };
     }
@@ -40,8 +40,10 @@ const viewReducer = (state: State, action: Action): State => {
         image = new Image();
         image.src = canvas.toDataURL();
       }
-      const nextX = state.view.x + (action.x - state.view.dragStartX) * state.view.width / VIEW_WIDTH;
-      const nextY = state.view.y + (action.y - state.view.dragStartY) * state.view.height / VIEW_HEIGHT;;
+      const nextX =
+        state.view.x + (action.x - state.view.dragStartX) * state.view.width / VIEW_WIDTH;
+      const nextY =
+        state.view.y + (action.y - state.view.dragStartY) * state.view.height / VIEW_HEIGHT;;
       return {
         ...state,
         view: {
@@ -56,7 +58,7 @@ const viewReducer = (state: State, action: Action): State => {
           imgY: image == null ? state.view.imgY : nextY,
           imgWidth: image != null ? state.view.width : state.view.imgWidth,
           imgHeight: image != null ? state.view.height : state.view.imgHeight,
-          imgCount: 5,
+          imgCount: ZOOM_DEBOUNCE,
         },
       }
     }

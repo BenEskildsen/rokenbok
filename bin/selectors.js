@@ -15,10 +15,6 @@ var getSelectedEntities = function getSelectedEntities(state) {
 var getWorldCoord = function getWorldCoord(state, x, y) {
   var view = state.view;
 
-  console.log({ x: Math.round(x), y: Math.round(y) }, ' => ', {
-    x: (x - VIEW_WIDTH / 2) * view.width / VIEW_WIDTH - view.x,
-    y: (y - VIEW_HEIGHT / 2) * view.height / VIEW_HEIGHT - view.y
-  });
   return {
     x: (x - VIEW_WIDTH / 2) * view.width / VIEW_WIDTH - view.x,
     y: (y - VIEW_HEIGHT / 2) * view.height / VIEW_HEIGHT - view.y

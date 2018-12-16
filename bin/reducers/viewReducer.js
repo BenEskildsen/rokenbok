@@ -4,7 +4,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
-    VIEW_HEIGHT = _require.VIEW_HEIGHT;
+    VIEW_HEIGHT = _require.VIEW_HEIGHT,
+    ZOOM_DEBOUNCE = _require.ZOOM_DEBOUNCE;
 
 var viewReducer = function viewReducer(state, action) {
   switch (action.type) {
@@ -28,7 +29,7 @@ var viewReducer = function viewReducer(state, action) {
             imgY: image == null ? state.view.imgY : state.view.y,
             imgWidth: image != null ? nextWidth : state.view.imgWidth,
             imgHeight: image != null ? nextHeight : state.view.imgHeight,
-            imgCount: 5
+            imgCount: ZOOM_DEBOUNCE
           })
         });
       }
@@ -57,7 +58,7 @@ var viewReducer = function viewReducer(state, action) {
             imgY: _image == null ? state.view.imgY : nextY,
             imgWidth: _image != null ? state.view.width : state.view.imgWidth,
             imgHeight: _image != null ? state.view.height : state.view.imgHeight,
-            imgCount: 5
+            imgCount: ZOOM_DEBOUNCE
           })
         });
       }

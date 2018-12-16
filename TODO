@@ -1,9 +1,10 @@
 
  - - - - - - TODO - - - - - -
- - write selector to convert canvas coord to world coord
- - detect what was clicked on when selecting
  - miners should drop off at trucks/factories (and turn around?)
- - render which direction trucks/miners are facing
+ - visualize what trucks/miners are carrying
+ - waypoint system for trucks/miners
+ - UI for tracking collected boks
+ - UI for buying more trucks/miners
 
 
  - - - - - - PROBABLY DON'T ACTUALLY NEED (UPON FURTHER REFLECTION) - - - - - -
@@ -16,3 +17,6 @@
  - seed function for bok initial positions
  - zoom can save canvas to bitmap and zoom the image instead of re-rendering everything
  - panning while zoomed in moves the view more than 1-to-1
+ - write selector to convert canvas coord to world coord
+ - detect what was clicked on when selecting
+ - render which direction trucks/miners are facing
