@@ -125,7 +125,7 @@ var seedBoks = function seedBoks() {
   var boks = [];
   for (var x = -1000; x < 1000; x += 5) {
     for (var y = -1000; y < 1000; y += 5) {
-      if (Math.sqrt(x * x + y * y) >= 400 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 400) {
+      if (Math.sqrt(x * x + y * y) >= 200 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 400) {
         boks.push(make('bok', x, y));
       }
     }
@@ -217,10 +217,9 @@ var _require2 = require('../settings'),
     TRUCK_TURN_SPEED = _require2.TRUCK_TURN_SPEED,
     TRUCK_SPEED = _require2.TRUCK_SPEED,
     TRUCK_ACCEL = _require2.TRUCK_ACCEL,
-    MINER_RADIUS = _require2.MINER_RADIUS,
-    MINER_TURN_SPEED = _require2.MINER_TURN_SPEED,
     MINER_SPEED = _require2.MINER_SPEED,
-    MINER_ACCEL = _require2.MINER_ACCEL;
+    MINER_RADIUS = _require2.MINER_RADIUS,
+    MINER_TURN_SPEED = _require2.MINER_TURN_SPEED;
 
 var _require3 = require('../utils'),
     distance = _require3.distance;
@@ -232,7 +231,10 @@ var entityReducer = function entityReducer(state, action) {
   switch (action.type) {
     case 'MAYBE_SELECT':
       deselectAll(state.entities);
-      maybeSelect(state.entities, getWorldCoord(state, action.x, action.y));
+      var selEntity = maybeSelect(state.entities, getWorldCoord(state, action.x, action.y));
+      if (selEntity != null && selEntity.type == 'miner') {
+        selEntity.speed = 0;
+      }
       return state;
     case 'ACCELERATE':
       {
@@ -243,8 +245,6 @@ var entityReducer = function entityReducer(state, action) {
         var entity = selEntities[0];
         if (entity.type == 'truck') {
           entity.accel = entity.speed < TRUCK_SPEED ? TRUCK_ACCEL : 0;
-        } else if (entity.type == 'miner') {
-          entity.accel = entity.speed < MINER_SPEED ? MINER_ACCEL : 0;
         }
         return state;
       }
@@ -257,8 +257,6 @@ var entityReducer = function entityReducer(state, action) {
         var _entity = _selEntities[0];
         if (_entity.type == 'truck') {
           _entity.accel = _entity.speed > 0 ? -1 * TRUCK_ACCEL : 0;
-        } else if (_entity.type == 'miner') {
-          _entity.accel = _entity.speed > 0 ? -1 * MINER_ACCEL : 0;
         }
         return state;
       }
@@ -281,11 +279,15 @@ var entityReducer = function entityReducer(state, action) {
 
 var deselectAll = function deselectAll(entities) {
   entities.forEach(function (entity) {
-    return entity.selected = false;
+    if (entity.type == 'miner' && entity.selected) {
+      entity.speed = MINER_SPEED;
+    }
+    entity.selected = false;
   });
 };
 
 var maybeSelect = function maybeSelect(entities, worldCoord) {
+  var selEntity = null;
   entities.forEach(function (entity) {
     if (entity.type == 'truck') {
       var _x = entity.x,
@@ -293,6 +295,7 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 
       if (distance({ x: _x, y: _y }, worldCoord) < max(TRUCK_WIDTH, TRUCK_HEIGHT)) {
         entity.selected = true;
+        selEntity = entity;
       }
     }
 
@@ -302,9 +305,11 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 
       if (distance({ x: _x2, y: _y2 }, worldCoord) < MINER_RADIUS) {
         entity.selected = true;
+        selEntity = entity;
       }
     }
   });
+  return selEntity;
 };
 
 module.exports = {
@@ -369,6 +374,9 @@ var _require = require('../settings'),
 var _require2 = require('../utils'),
     distance = _require2.distance;
 
+var _require3 = require('../selectors'),
+    thetaToNearestBase = _require3.thetaToNearestBase;
+
 var tickReducer = function tickReducer(state, action) {
   var imgCount = state.view.imgCount;
   var image = state.view.image;
@@ -378,7 +386,7 @@ var tickReducer = function tickReducer(state, action) {
     shouldRender = true;
   }
   return _extends({}, state, {
-    entities: computePhysics(state.entities),
+    entities: computePhysics(state),
     view: _extends({}, state.view, {
       image: image,
       shouldRender: shouldRender,
@@ -387,7 +395,8 @@ var tickReducer = function tickReducer(state, action) {
   });
 };
 
-var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) {
+var computePhysics = function computePhysics(state) {
+  var entities = state.entities;
   // Update speeds and positions
   var nonBokEntities = entities.filter(function (entity) {
     return entity.type != 'bok';
@@ -444,12 +453,17 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
           entity.speed /= 2;
           bok.shouldDestroy = true;
         }
-        // miners pick up boks they hit
+        // miners pick up boks they hit and turn around
         if (entity.type == 'miner') {
           bok.shouldDestroy = true;
           entity.carrying = [bok];
+<<<<<<< Updated upstream
           console.log(entity);
           entity.speed *= -1 * entity.speed;
+=======
+          entity.theta = thetaToNearestBase(state, entity);
+          console.log(entity.theta);
+>>>>>>> Stashed changes
         }
       }
     }
@@ -504,7 +518,11 @@ var collided = function collided(entityA, entityB) {
 module.exports = {
   tickReducer: tickReducer
 };
+<<<<<<< Updated upstream
 },{"../settings":16,"../utils":18}],8:[function(require,module,exports){
+=======
+},{"../selectors":14,"../settings":15,"../utils":17}],8:[function(require,module,exports){
+>>>>>>> Stashed changes
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -890,6 +908,10 @@ var _require = require('./settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
     VIEW_HEIGHT = _require.VIEW_HEIGHT;
 
+var _require2 = require('./utils'),
+    distance = _require2.distance,
+    vecToAngle = _require2.vecToAngle;
+
 var getSelectedEntities = function getSelectedEntities(state) {
   return state.entities.filter(function (entity) {
     return entity.selected;
@@ -907,11 +929,35 @@ var getWorldCoord = function getWorldCoord(state, x, y) {
   };
 };
 
+var thetaToNearestBase = function thetaToNearestBase(state, entity) {
+  var bases = state.entities.filter(function (e) {
+    return e.type == 'base';
+  });
+  var theta = 0;
+  var shortestDist = Infinity;
+  for (var i = 0; i < bases.length; i++) {
+    var dist = distance(entity, bases[i]);
+    if (dist < shortestDist) {
+      shortestDist = dist;
+      var vec = { x: bases[i].x - entity.x, y: bases[i].y - entity.y };
+      console.log(vec);
+      theta = Math.atan2(vec.y, vec.x) - Math.PI / 2;
+      console.log(theta * 180 / Math.PI);
+    }
+  }
+  return theta;
+};
+
 module.exports = {
   getSelectedEntities: getSelectedEntities,
-  getWorldCoord: getWorldCoord
+  getWorldCoord: getWorldCoord,
+  thetaToNearestBase: thetaToNearestBase
 };
+<<<<<<< Updated upstream
 },{"./settings":16}],16:[function(require,module,exports){
+=======
+},{"./settings":15,"./utils":17}],15:[function(require,module,exports){
+>>>>>>> Stashed changes
 'use strict';
 
 module.exports = {
@@ -923,8 +969,7 @@ module.exports = {
   VIEW_WIDTH: 800,
   VIEW_HEIGHT: 600,
 
-  MINER_SPEED: 4,
-  MINER_ACCEL: 1,
+  MINER_SPEED: 2,
   MINER_RADIUS: 5,
   MINER_TURN_SPEED: 7 * Math.PI / 180,
   MINER_COLOR: '#dcdcdc',
@@ -1086,13 +1131,7 @@ var angleToVec = function angleToVec(theta, scalar) {
 
 // in radians
 var vecToAngle = function vecToAngle(vector) {
-  var theta = Math.atan(vector.y / vector.x);
-  if (vector.x < 0 && vector.y < 0) {
-    return theta + Math.PI;
-  }
-  if (vector.x < 0 && vector.y > 0) {
-    return theta + Math.PI;
-  }
+  var theta = Math.atan2(-vector.y, vector.x);
   return theta;
 };
 

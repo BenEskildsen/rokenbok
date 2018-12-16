@@ -59,13 +59,7 @@ const angleToVec = (theta, scalar) => {
 
 // in radians
 const vecToAngle = (vector) => {
-  const theta = Math.atan(vector.y / vector.x);
-  if (vector.x < 0 && vector.y < 0) {
-    return theta + Math.PI;
-  }
-  if (vector.x < 0 && vector.y > 0) {
-    return theta + Math.PI;
-  }
+  const theta = Math.atan2(vector.y, vector.x) - Math.PI / 2;
   return theta;
 };
 

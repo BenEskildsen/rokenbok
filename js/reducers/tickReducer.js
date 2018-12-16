@@ -10,6 +10,7 @@ const {
   FACTORY_SIZE,
 } = require('../settings');
 const {distance} = require('../utils');
+const {thetaToNearestBase} = require('../selectors');
 
 const tickReducer = (state: State, action: Action): State => {
   const imgCount = state.view.imgCount;
@@ -21,7 +22,7 @@ const tickReducer = (state: State, action: Action): State => {
   }
   return {
     ...state,
-    entities: computePhysics(state.entities),
+    entities: computePhysics(state),
     view: {
       ...state.view,
       image,
@@ -31,7 +32,8 @@ const tickReducer = (state: State, action: Action): State => {
   };
 }
 
-const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
+const computePhysics = (state): Array<Entity> => {
+  const entities = state.entities;
   // Update speeds and positions
   const nonBokEntities = entities.filter(entity => entity.type != 'bok');
   for (const entity of nonBokEntities) {
@@ -62,11 +64,12 @@ const computePhysics = (entities, fieldWidth, fieldHeight): Array<Entity> => {
           entity.speed /= 2;
           bok.shouldDestroy = true;
         }
-        // miners pick up boks they hit
+        // miners pick up boks they hit and turn around
         if (entity.type == 'miner') {
           bok.shouldDestroy = true;
           entity.carrying = [bok];
-          entity.speed *= -1 * entity.speed;
+          entity.theta = thetaToNearestBase(state, entity);
+          console.log(entity.theta);
         }
       }
     }
