@@ -12,9 +12,22 @@ const {
 const {distance} = require('../utils');
 
 const tickReducer = (state: State, action: Action): State => {
+  const imgCount = state.view.imgCount;
+  let image = state.view.image;
+  let shouldRender = state.view.shouldRender;
+  if (imgCount == 1) {
+    image = null;
+    shouldRender = true;
+  }
   return {
     ...state,
     entities: computePhysics(state.entities),
+    view: {
+      ...state.view,
+      image,
+      shouldRender,
+      imgCount: state.view.imgCount - 1,
+    }
   };
 }
 

@@ -27,5 +27,6 @@ export type State = {
     dragStartX: number,
     dragStartY: number,
     shouldRender: boolean,
+    image: Image,
   },
 };

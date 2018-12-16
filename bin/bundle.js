@@ -111,7 +111,9 @@ var getInitialState = function getInitialState() {
       dragging: false,
       dragStartX: 0,
       dragStartY: 0,
-      shouldRender: true
+      shouldRender: true,
+      image: null,
+      imgCount: 0
     }
   };
 };
@@ -346,8 +348,20 @@ var _require2 = require('../utils'),
     distance = _require2.distance;
 
 var tickReducer = function tickReducer(state, action) {
+  var imgCount = state.view.imgCount;
+  var image = state.view.image;
+  var shouldRender = state.view.shouldRender;
+  if (imgCount == 1) {
+    image = null;
+    shouldRender = true;
+  }
   return _extends({}, state, {
-    entities: computePhysics(state.entities)
+    entities: computePhysics(state.entities),
+    view: _extends({}, state.view, {
+      image: image,
+      shouldRender: shouldRender,
+      imgCount: state.view.imgCount - 1
+    })
   });
 };
 
@@ -472,29 +486,65 @@ module.exports = {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _require = require('../settings'),
+    VIEW_WIDTH = _require.VIEW_WIDTH,
+    VIEW_HEIGHT = _require.VIEW_HEIGHT;
+
 var viewReducer = function viewReducer(state, action) {
   switch (action.type) {
     case 'ZOOM':
-      return _extends({}, state, {
-        view: _extends({}, state.view, {
-          width: state.view.width + 12 * action.out,
-          height: state.view.height + 9 * action.out,
-          shouldRender: true
-        })
-      });
-    case 'MOUSE_MOVE':
-      if (!state.view.dragging) {
-        return state;
+      {
+        var canvas = document.getElementById('canvas');
+        var image = null;
+        if (!state.view.image) {
+          image = new Image();
+          image.src = canvas.toDataURL();
+        }
+        var nextWidth = state.view.width + 12 * action.out;
+        var nextHeight = state.view.height + 9 * action.out;
+        return _extends({}, state, {
+          view: _extends({}, state.view, {
+            width: nextWidth,
+            height: nextHeight,
+            shouldRender: true,
+            image: image || state.view.image,
+            imgX: image == null ? state.view.imgX : state.view.x,
+            imgY: image == null ? state.view.imgY : state.view.y,
+            imgWidth: image != null ? nextWidth : state.view.imgWidth,
+            imgHeight: image != null ? nextHeight : state.view.imgHeight,
+            imgCount: 5
+          })
+        });
       }
-      return _extends({}, state, {
-        view: _extends({}, state.view, {
-          x: state.view.x + action.x - state.view.dragStartX,
-          y: state.view.y + action.y - state.view.dragStartY,
-          dragStartX: action.x,
-          dragStartY: action.y,
-          shouldRender: true
-        })
-      });
+    case 'MOUSE_MOVE':
+      {
+        if (!state.view.dragging) {
+          return state;
+        }
+        var _canvas = document.getElementById('canvas');
+        var _image = null;
+        if (!state.view.image) {
+          _image = new Image();
+          _image.src = _canvas.toDataURL();
+        }
+        var nextX = state.view.x + (action.x - state.view.dragStartX) * state.view.width / VIEW_WIDTH;
+        var nextY = state.view.y + (action.y - state.view.dragStartY) * state.view.height / VIEW_HEIGHT;;
+        return _extends({}, state, {
+          view: _extends({}, state.view, {
+            x: nextX,
+            y: nextY,
+            dragStartX: action.x,
+            dragStartY: action.y,
+            shouldRender: true,
+            image: _image || state.view.image,
+            imgX: _image == null ? state.view.imgX : nextX,
+            imgY: _image == null ? state.view.imgY : nextY,
+            imgWidth: _image != null ? state.view.width : state.view.imgWidth,
+            imgHeight: _image != null ? state.view.height : state.view.imgHeight,
+            imgCount: 5
+          })
+        });
+      }
     case 'MOUSE_DOWN':
       return _extends({}, state, {
         view: _extends({}, state.view, {
@@ -515,7 +565,7 @@ var viewReducer = function viewReducer(state, action) {
 module.exports = {
   viewReducer: viewReducer
 };
-},{}],9:[function(require,module,exports){
+},{"../settings":12}],9:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -563,6 +613,12 @@ var renderToCanvas = function renderToCanvas(state) {
   ctx.save();
   ctx.scale(VIEW_WIDTH / view.width, VIEW_HEIGHT / view.height);
   ctx.translate(view.x + view.width / 2, view.y + view.height / 2);
+  if (view.image) {
+    ctx.drawImage(view.image, -view.imgX - view.imgWidth / 2, -view.imgY - view.imgHeight / 2, view.imgWidth, view.imgHeight);
+    ctx.restore();
+    view.shouldRender = false;
+    return;
+  }
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
@@ -621,7 +677,7 @@ var renderMiner = function renderMiner(ctx, entity) {
     renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
   }
   if (!entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS, BACKGROUND_COLOR);
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
 };
@@ -639,7 +695,7 @@ var renderTruck = function renderTruck(ctx, entity) {
     renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
   }
   if (!entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH, TRUCK_HEIGHT, BACKGROUND_COLOR);
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
   }
   renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
 };

@@ -21,7 +21,9 @@ var getInitialState = function getInitialState() {
       dragging: false,
       dragStartX: 0,
       dragStartY: 0,
-      shouldRender: true
+      shouldRender: true,
+      image: null,
+      imgCount: 0
     }
   };
 };

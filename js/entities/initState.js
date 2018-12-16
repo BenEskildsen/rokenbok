@@ -23,6 +23,8 @@ const getInitialState = (): State => {
       dragStartX: 0,
       dragStartY: 0,
       shouldRender: true,
+      image: null,
+      imgCount: 0,
     }
   };
 };

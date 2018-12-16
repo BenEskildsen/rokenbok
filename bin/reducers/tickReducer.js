@@ -15,8 +15,20 @@ var _require2 = require('../utils'),
     distance = _require2.distance;
 
 var tickReducer = function tickReducer(state, action) {
+  var imgCount = state.view.imgCount;
+  var image = state.view.image;
+  var shouldRender = state.view.shouldRender;
+  if (imgCount == 1) {
+    image = null;
+    shouldRender = true;
+  }
   return _extends({}, state, {
-    entities: computePhysics(state.entities)
+    entities: computePhysics(state.entities),
+    view: _extends({}, state.view, {
+      image: image,
+      shouldRender: shouldRender,
+      imgCount: state.view.imgCount - 1
+    })
   });
 };
 

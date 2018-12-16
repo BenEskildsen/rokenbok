@@ -45,6 +45,12 @@ var renderToCanvas = function renderToCanvas(state) {
   ctx.save();
   ctx.scale(VIEW_WIDTH / view.width, VIEW_HEIGHT / view.height);
   ctx.translate(view.x + view.width / 2, view.y + view.height / 2);
+  if (view.image) {
+    ctx.drawImage(view.image, -view.imgX - view.imgWidth / 2, -view.imgY - view.imgHeight / 2, view.imgWidth, view.imgHeight);
+    ctx.restore();
+    view.shouldRender = false;
+    return;
+  }
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
@@ -103,7 +109,7 @@ var renderMiner = function renderMiner(ctx, entity) {
     renderCircle(ctx, x, y, MINER_RADIUS + 2, SELECT_COLOR);
   }
   if (!entity.selected) {
-    renderCircle(ctx, prevX, prevY, MINER_RADIUS, BACKGROUND_COLOR);
+    renderCircle(ctx, prevX, prevY, MINER_RADIUS + 3, BACKGROUND_COLOR);
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
 };
@@ -121,7 +127,7 @@ var renderTruck = function renderTruck(ctx, entity) {
     renderRect(ctx, x, y, theta, TRUCK_WIDTH + 2, TRUCK_HEIGHT + 2, SELECT_COLOR);
   }
   if (!entity.selected) {
-    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH, TRUCK_HEIGHT, BACKGROUND_COLOR);
+    renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
   }
   renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
 };
