@@ -7,6 +7,8 @@ const {
   MINER_RADIUS,
   MINER_TURN_SPEED, MINER_SPEED, MINER_ACCEL,
 } = require('../settings');
+const {distance} = require('../utils');
+const {max} = Math;
 
 const entityReducer = (state: State, action: Action): State => {
   switch (action.type) {
@@ -14,7 +16,7 @@ const entityReducer = (state: State, action: Action): State => {
       deselectAll(state.entities);
       maybeSelect(
         state.entities,
-        getWorldCoord(action.x, action.y),
+        getWorldCoord(state, action.x, action.y),
       );
       return state;
     case 'ACCELERATE': {
@@ -65,9 +67,18 @@ const deselectAll = (entities: Array<Entity>): void => {
 
 const maybeSelect = (entities: Array<Entity>, worldCoord: {x: number, y: number}) => {
   entities.forEach(entity => {
-    // TODO
     if (entity.type == 'truck') {
-      entity.selected = true;
+      const {x, y} = entity;
+      if (distance({x, y}, worldCoord) < max(TRUCK_WIDTH, TRUCK_HEIGHT)) {
+        entity.selected = true;
+      }
+    }
+
+    if (entity.type == 'miner') {
+      const {x, y} = entity;
+      if (distance({x, y}, worldCoord) < MINER_RADIUS) {
+        entity.selected = true;
+      }
     }
   });
 }

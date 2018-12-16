@@ -10,7 +10,7 @@ const getInitialState = (): State => {
     running: true,
     entities: [
       ...seedBoks(),
-      make('truck', 50, 50),
+      make('truck', -50, -50),
       make('miner', 75, 75),
       make('factory', 400, 400),
     ],

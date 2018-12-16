@@ -15,11 +15,17 @@ var _require2 = require('../settings'),
     MINER_SPEED = _require2.MINER_SPEED,
     MINER_ACCEL = _require2.MINER_ACCEL;
 
+var _require3 = require('../utils'),
+    distance = _require3.distance;
+
+var max = Math.max;
+
+
 var entityReducer = function entityReducer(state, action) {
   switch (action.type) {
     case 'MAYBE_SELECT':
       deselectAll(state.entities);
-      maybeSelect(state.entities, getWorldCoord(action.x, action.y));
+      maybeSelect(state.entities, getWorldCoord(state, action.x, action.y));
       return state;
     case 'ACCELERATE':
       {
@@ -74,9 +80,22 @@ var deselectAll = function deselectAll(entities) {
 
 var maybeSelect = function maybeSelect(entities, worldCoord) {
   entities.forEach(function (entity) {
-    // TODO
     if (entity.type == 'truck') {
-      entity.selected = true;
+      var _x = entity.x,
+          _y = entity.y;
+
+      if (distance({ x: _x, y: _y }, worldCoord) < max(TRUCK_WIDTH, TRUCK_HEIGHT)) {
+        entity.selected = true;
+      }
+    }
+
+    if (entity.type == 'miner') {
+      var _x2 = entity.x,
+          _y2 = entity.y;
+
+      if (distance({ x: _x2, y: _y2 }, worldCoord) < MINER_RADIUS) {
+        entity.selected = true;
+      }
     }
   });
 };

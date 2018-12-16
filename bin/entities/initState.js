@@ -12,7 +12,7 @@ var _require2 = require('./makeEntity'),
 var getInitialState = function getInitialState() {
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks()), [make('truck', 50, 50), make('miner', 75, 75), make('factory', 400, 400)]),
+    entities: [].concat(_toConsumableArray(seedBoks()), [make('truck', -50, -50), make('miner', 75, 75), make('factory', 400, 400)]),
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,

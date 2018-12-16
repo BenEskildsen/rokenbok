@@ -102,7 +102,7 @@ var _require2 = require('./makeEntity'),
 var getInitialState = function getInitialState() {
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks()), [make('truck', 50, 50), make('miner', 75, 75), make('factory', 400, 400)]),
+    entities: [].concat(_toConsumableArray(seedBoks()), [make('truck', -50, -50), make('miner', 75, 75), make('factory', 400, 400)]),
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
@@ -219,11 +219,17 @@ var _require2 = require('../settings'),
     MINER_SPEED = _require2.MINER_SPEED,
     MINER_ACCEL = _require2.MINER_ACCEL;
 
+var _require3 = require('../utils'),
+    distance = _require3.distance;
+
+var max = Math.max;
+
+
 var entityReducer = function entityReducer(state, action) {
   switch (action.type) {
     case 'MAYBE_SELECT':
       deselectAll(state.entities);
-      maybeSelect(state.entities, getWorldCoord(action.x, action.y));
+      maybeSelect(state.entities, getWorldCoord(state, action.x, action.y));
       return state;
     case 'ACCELERATE':
       {
@@ -278,9 +284,22 @@ var deselectAll = function deselectAll(entities) {
 
 var maybeSelect = function maybeSelect(entities, worldCoord) {
   entities.forEach(function (entity) {
-    // TODO
     if (entity.type == 'truck') {
-      entity.selected = true;
+      var _x = entity.x,
+          _y = entity.y;
+
+      if (distance({ x: _x, y: _y }, worldCoord) < max(TRUCK_WIDTH, TRUCK_HEIGHT)) {
+        entity.selected = true;
+      }
+    }
+
+    if (entity.type == 'miner') {
+      var _x2 = entity.x,
+          _y2 = entity.y;
+
+      if (distance({ x: _x2, y: _y2 }, worldCoord) < MINER_RADIUS) {
+        entity.selected = true;
+      }
     }
   });
 };
@@ -288,7 +307,7 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 module.exports = {
   entityReducer: entityReducer
 };
-},{"../selectors":11,"../settings":12}],6:[function(require,module,exports){
+},{"../selectors":11,"../settings":12,"../utils":14}],6:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -587,6 +606,10 @@ var _require2 = require('./shapes'),
     renderCircle = _require2.renderCircle,
     renderRect = _require2.renderRect;
 
+var _require3 = require('../selectors'),
+    getWorldCoord = _require3.getWorldCoord,
+    getCanvasCoord = _require3.getCanvasCoord;
+
 var initCanvas = function initCanvas() {
   var canvas = document.getElementById('canvas');
   if (canvas == null) {
@@ -608,6 +631,8 @@ var renderToCanvas = function renderToCanvas(state) {
   if (view.shouldRender) {
     ctx.fillStyle = BACKGROUND_COLOR;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+    console.log({ x: view.width / 2, y: view.height / 2 }, getWorldCoord(state, view.width / 2, view.height / 2));
   }
 
   ctx.save();
@@ -644,6 +669,7 @@ var renderToCanvas = function renderToCanvas(state) {
           break;
       }
     }
+
     // shhh this is a side-effect on the state so that I can change the state without
     // causing yet-another-re-render. This flag only exists to try to not render more
     // than needed
@@ -734,7 +760,7 @@ var renderFactory = function renderFactory(ctx, entity) {
 };
 
 module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };
-},{"../settings":12,"./shapes":10}],10:[function(require,module,exports){
+},{"../selectors":11,"../settings":12,"./shapes":10}],10:[function(require,module,exports){
 "use strict";
 
 var renderCircle = function renderCircle(ctx, x, y, radius, color) {
@@ -742,7 +768,7 @@ var renderCircle = function renderCircle(ctx, x, y, radius, color) {
   ctx.fillStyle = color;
   ctx.translate(x, y);
   ctx.beginPath();
-  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.arc(0, 0, radius, 0, 2 * Math.PI);
   ctx.fill();
   ctx.restore();
 };
@@ -763,6 +789,10 @@ module.exports = {
 },{}],11:[function(require,module,exports){
 'use strict';
 
+var _require = require('./settings'),
+    VIEW_WIDTH = _require.VIEW_WIDTH,
+    VIEW_HEIGHT = _require.VIEW_HEIGHT;
+
 var getSelectedEntities = function getSelectedEntities(state) {
   return state.entities.filter(function (entity) {
     return entity.selected;
@@ -771,17 +801,24 @@ var getSelectedEntities = function getSelectedEntities(state) {
 
 // convert given x, y in canvas coordinates to world coordinates based on the
 // view position
-
-
 var getWorldCoord = function getWorldCoord(state, x, y) {
-  // TODO
+  var view = state.view;
+
+  console.log({ x: Math.round(x), y: Math.round(y) }, ' => ', {
+    x: (x - VIEW_WIDTH / 2) * view.width / VIEW_WIDTH - view.x,
+    y: (y - VIEW_HEIGHT / 2) * view.height / VIEW_HEIGHT - view.y
+  });
+  return {
+    x: (x - VIEW_WIDTH / 2) * view.width / VIEW_WIDTH - view.x,
+    y: (y - VIEW_HEIGHT / 2) * view.height / VIEW_HEIGHT - view.y
+  };
 };
 
 module.exports = {
   getSelectedEntities: getSelectedEntities,
   getWorldCoord: getWorldCoord
 };
-},{}],12:[function(require,module,exports){
+},{"./settings":12}],12:[function(require,module,exports){
 'use strict';
 
 module.exports = {

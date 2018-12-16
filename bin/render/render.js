@@ -19,6 +19,10 @@ var _require2 = require('./shapes'),
     renderCircle = _require2.renderCircle,
     renderRect = _require2.renderRect;
 
+var _require3 = require('../selectors'),
+    getWorldCoord = _require3.getWorldCoord,
+    getCanvasCoord = _require3.getCanvasCoord;
+
 var initCanvas = function initCanvas() {
   var canvas = document.getElementById('canvas');
   if (canvas == null) {
@@ -40,6 +44,8 @@ var renderToCanvas = function renderToCanvas(state) {
   if (view.shouldRender) {
     ctx.fillStyle = BACKGROUND_COLOR;
     ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+    console.log({ x: view.width / 2, y: view.height / 2 }, getWorldCoord(state, view.width / 2, view.height / 2));
   }
 
   ctx.save();
@@ -76,6 +82,7 @@ var renderToCanvas = function renderToCanvas(state) {
           break;
       }
     }
+
     // shhh this is a side-effect on the state so that I can change the state without
     // causing yet-another-re-render. This flag only exists to try to not render more
     // than needed
