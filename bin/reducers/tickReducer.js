@@ -93,6 +93,7 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
         if (entity.type == 'miner') {
           bok.shouldDestroy = true;
           entity.carrying = [bok];
+          console.log(entity);
           entity.speed *= -1 * entity.speed;
         }
       }

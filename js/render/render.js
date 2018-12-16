@@ -8,6 +8,7 @@ const {renderCircle, renderRect} = require('./shapes');
 const {renderMiner} = require('./renderMiner');
 const {renderTruck} = require('./renderTruck');
 const {renderFactory} = require('./renderFactory');
+const {renderBok} = require('./renderBok');
 
 const initCanvas = () => {
   const canvas = document.getElementById('canvas');
@@ -73,11 +74,6 @@ const renderToCanvas = (state) => {
   // than needed
   view.shouldRender = false;
   ctx.restore();
-};
-
-const renderBok = (ctx, entity) => {
-  const {x, y, theta} = entity;
-  renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
 };
 
 const renderBase = (ctx, entity) => {

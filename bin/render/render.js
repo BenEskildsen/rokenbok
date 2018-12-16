@@ -23,6 +23,9 @@ var _require4 = require('./renderTruck'),
 var _require5 = require('./renderFactory'),
     renderFactory = _require5.renderFactory;
 
+var _require6 = require('./renderBok'),
+    renderBok = _require6.renderBok;
+
 var initCanvas = function initCanvas() {
   var canvas = document.getElementById('canvas');
   if (canvas == null) {
@@ -104,14 +107,6 @@ var renderToCanvas = function renderToCanvas(state) {
 
   view.shouldRender = false;
   ctx.restore();
-};
-
-var renderBok = function renderBok(ctx, entity) {
-  var x = entity.x,
-      y = entity.y,
-      theta = entity.theta;
-
-  renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
 };
 
 var renderBase = function renderBase(ctx, entity) {
