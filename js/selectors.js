@@ -3,6 +3,7 @@
 const {
   VIEW_WIDTH, VIEW_HEIGHT
 } = require('./settings');
+const {distance, vecToAngle} = require('./utils');
 import type {State} from 'types';
 
 const getSelectedEntities = (state: State): Array<Entity> => {
@@ -19,7 +20,23 @@ const getWorldCoord = (state: State, x: number, y: number): {x: number, y: numbe
   }
 };
 
+const thetaToNearestBase = (state: State, entity): number => {
+  const bases = state.entities.filter(e => e.type == 'base');
+  let theta = 0;
+  let shortestDist = Infinity;
+  for (let i = 0; i < bases.length; i++) {
+    const dist = distance(entity, bases[i]);
+    if (dist < shortestDist) {
+      shortestDist = dist;
+      const vec = {x: bases[i].x - entity.x, y: bases[i].y - entity.y};
+      theta = vecToAngle(vec);
+    }
+  }
+  return theta;
+};
+
 module.exports = {
   getSelectedEntities,
-  getWorldCoord
+  getWorldCoord,
+  thetaToNearestBase,
 }

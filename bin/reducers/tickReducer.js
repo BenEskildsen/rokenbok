@@ -15,6 +15,9 @@ var _require = require('../settings'),
 var _require2 = require('../utils'),
     distance = _require2.distance;
 
+var _require3 = require('../selectors'),
+    thetaToNearestBase = _require3.thetaToNearestBase;
+
 var tickReducer = function tickReducer(state, action) {
   var imgCount = state.view.imgCount;
   var image = state.view.image;
@@ -24,7 +27,7 @@ var tickReducer = function tickReducer(state, action) {
     shouldRender = true;
   }
   return _extends({}, state, {
-    entities: computePhysics(state.entities),
+    entities: computePhysics(state),
     view: _extends({}, state.view, {
       image: image,
       shouldRender: shouldRender,
@@ -33,7 +36,8 @@ var tickReducer = function tickReducer(state, action) {
   });
 };
 
-var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) {
+var computePhysics = function computePhysics(state) {
+  var entities = state.entities;
   // Update speeds and positions
   var nonBokEntities = entities.filter(function (entity) {
     return entity.type != 'bok';
@@ -90,11 +94,12 @@ var computePhysics = function computePhysics(entities, fieldWidth, fieldHeight) 
           entity.speed /= 2;
           bok.shouldDestroy = true;
         }
-        // miners pick up boks they hit
+        // miners pick up boks they hit and turn around
         if (entity.type == 'miner') {
           bok.shouldDestroy = true;
           entity.carrying = [bok];
-          entity.speed *= -1 * entity.speed;
+          entity.theta = thetaToNearestBase(state, entity);
+          console.log(entity.theta);
         }
       }
     }

@@ -35,7 +35,7 @@ var seedBoks = function seedBoks() {
   var boks = [];
   for (var x = -1000; x < 1000; x += 5) {
     for (var y = -1000; y < 1000; y += 5) {
-      if (Math.sqrt(x * x + y * y) >= 400 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 400) {
+      if (Math.sqrt(x * x + y * y) >= 200 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 600) {
         boks.push(make('bok', x, y));
       }
     }

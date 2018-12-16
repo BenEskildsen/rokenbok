@@ -9,8 +9,7 @@ module.exports = {
   VIEW_WIDTH    : 800,
   VIEW_HEIGHT   : 600,
 
-  MINER_SPEED   : 4,
-  MINER_ACCEL   : 1,
+  MINER_SPEED   : 2,
   MINER_RADIUS  : 5,
   MINER_TURN_SPEED: 7 * Math.PI / 180,
   MINER_COLOR   : '#dcdcdc',
