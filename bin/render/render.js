@@ -6,7 +6,9 @@ var _require = require('../settings'),
     BACKGROUND_COLOR = _require.BACKGROUND_COLOR,
     SELECT_COLOR = _require.SELECT_COLOR,
     BOK_SIZE = _require.BOK_SIZE,
-    BOK_COLOR = _require.BOK_COLOR;
+    BOK_COLOR = _require.BOK_COLOR,
+    BASE_RADIUS = _require.BASE_RADIUS,
+    BASE_COLOR = _require.BASE_COLOR;
 
 var _require2 = require('./shapes'),
     renderCircle = _require2.renderCircle,
@@ -77,6 +79,9 @@ var renderToCanvas = function renderToCanvas(state) {
         case 'factory':
           renderFactory(ctx, entity);
           break;
+        case 'base':
+          renderBase(ctx, entity);
+          break;
       }
     }
     // shhh this is a side-effect on the state so that I can change the state without
@@ -107,6 +112,14 @@ var renderBok = function renderBok(ctx, entity) {
       theta = entity.theta;
 
   renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
+};
+
+var renderBase = function renderBase(ctx, entity) {
+  var x = entity.x,
+      y = entity.y,
+      theta = entity.theta;
+
+  renderCircle(ctx, x, y, BASE_RADIUS, BASE_COLOR);
 };
 
 module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };

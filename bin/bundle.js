@@ -99,10 +99,13 @@ var _require = require('../settings'),
 var _require2 = require('./makeEntity'),
     make = _require2.make;
 
+var FAC_POS_X = 400;
+var FAC_POS_Y = 400;
+
 var getInitialState = function getInitialState() {
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks()), [make('truck', -50, -50), make('miner', 75, 75), make('factory', 400, 400)]),
+    entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, 75), make('factory', FAC_POS_X, FAC_POS_Y)]),
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
@@ -122,7 +125,7 @@ var seedBoks = function seedBoks() {
   var boks = [];
   for (var x = -1000; x < 1000; x += 5) {
     for (var y = -1000; y < 1000; y += 5) {
-      if (Math.sqrt(x * x + y * y) >= 200) {
+      if (Math.sqrt(x * x + y * y) >= 400 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 400) {
         boks.push(make('bok', x, y));
       }
     }
@@ -594,7 +597,9 @@ var _require = require('../settings'),
     BACKGROUND_COLOR = _require.BACKGROUND_COLOR,
     SELECT_COLOR = _require.SELECT_COLOR,
     BOK_SIZE = _require.BOK_SIZE,
-    BOK_COLOR = _require.BOK_COLOR;
+    BOK_COLOR = _require.BOK_COLOR,
+    BASE_RADIUS = _require.BASE_RADIUS,
+    BASE_COLOR = _require.BASE_COLOR;
 
 var _require2 = require('./shapes'),
     renderCircle = _require2.renderCircle,
@@ -665,6 +670,9 @@ var renderToCanvas = function renderToCanvas(state) {
         case 'factory':
           renderFactory(ctx, entity);
           break;
+        case 'base':
+          renderBase(ctx, entity);
+          break;
       }
     }
     // shhh this is a side-effect on the state so that I can change the state without
@@ -695,6 +703,14 @@ var renderBok = function renderBok(ctx, entity) {
       theta = entity.theta;
 
   renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
+};
+
+var renderBase = function renderBase(ctx, entity) {
+  var x = entity.x,
+      y = entity.y,
+      theta = entity.theta;
+
+  renderCircle(ctx, x, y, BASE_RADIUS, BASE_COLOR);
 };
 
 module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };
@@ -894,7 +910,10 @@ module.exports = {
   BOK_COLOR: 'brown',
 
   FACTORY_SIZE: 200,
-  FACTORY_COLOR: '#696969'
+  FACTORY_COLOR: '#696969',
+
+  BASE_RADIUS: 50,
+  BASE_COLOR: 'rgba(127, 255, 212, 0.5)'
 };
 },{}],16:[function(require,module,exports){
 "use strict";

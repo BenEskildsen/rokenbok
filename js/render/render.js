@@ -2,6 +2,7 @@ const {
   VIEW_WIDTH, VIEW_HEIGHT,
   BACKGROUND_COLOR, SELECT_COLOR,
   BOK_SIZE, BOK_COLOR,
+  BASE_RADIUS, BASE_COLOR,
 } = require('../settings');
 const {renderCircle, renderRect} = require('./shapes');
 const {renderMiner} = require('./renderMiner');
@@ -62,6 +63,9 @@ const renderToCanvas = (state) => {
       case 'factory':
         renderFactory(ctx, entity);
         break;
+      case 'base':
+        renderBase(ctx, entity);
+        break;
     }
   }
   // shhh this is a side-effect on the state so that I can change the state without
@@ -74,6 +78,11 @@ const renderToCanvas = (state) => {
 const renderBok = (ctx, entity) => {
   const {x, y, theta} = entity;
   renderRect(ctx, x, y, theta, BOK_SIZE, BOK_SIZE, BOK_COLOR);
+};
+
+const renderBase = (ctx, entity) => {
+  const {x, y, theta} = entity;
+  renderCircle(ctx, x, y, BASE_RADIUS, BASE_COLOR);
 };
 
 module.exports = {renderToCanvas, initCanvas};

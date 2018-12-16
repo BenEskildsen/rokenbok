@@ -27,5 +27,8 @@ module.exports = {
   BOK_COLOR: 'brown',
 
   FACTORY_SIZE: 200,
-  FACTORY_COLOR: '#696969'
+  FACTORY_COLOR: '#696969',
+
+  BASE_RADIUS: 50,
+  BASE_COLOR: 'rgba(127, 255, 212, 0.5)'
 };

@@ -1,7 +1,7 @@
 // @flow
 
 export type Entity = {
-  type: 'bok' | 'truck' | 'miner' | 'factory';
+  type: 'bok' | 'truck' | 'miner' | 'factory' | 'base';
   carrying: Array<Entity>;
   selected: boolean,
   x: number,
