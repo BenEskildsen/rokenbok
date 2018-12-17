@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -15,7 +15,7 @@ var React = require('React');
  * prop types:
  * title: the title of the card
  * content: an array of body lines for the card
- * action: optional, will create a button
+ * actions: optional array, will create buttons
  *    name: name on the button
  *    func: callback when the button is clicked
  *
@@ -31,36 +31,40 @@ var Card = function (_React$Component) {
   }
 
   _createClass(Card, [{
-    key: "render",
+    key: 'render',
     value: function render() {
-      var button = null;
-      if (this.props.action != null) {
-        button = React.createElement(
-          "button",
-          { onClick: this.props.action.func },
-          this.props.action.name
-        );
+      var buttons = [];
+      if (this.props.actions != null) {
+        buttons = this.props.actions.map(function (action) {
+          return React.createElement(
+            'button',
+            {
+              key: 'button_' + action.name,
+              onClick: action.func },
+            action.name
+          );
+        });
       }
       return React.createElement(
-        "div",
-        { className: "card" },
+        'div',
+        { className: 'card' },
         React.createElement(
-          "div",
-          { className: "cardTitle" },
+          'div',
+          { className: 'cardTitle' },
           React.createElement(
-            "b",
+            'b',
             null,
             this.props.title
           )
         ),
         this.props.content.map(function (line) {
           return React.createElement(
-            "p",
-            null,
+            'p',
+            { key: line },
             line
           );
         }),
-        button
+        buttons
       );
     }
   }]);

@@ -113,6 +113,7 @@ var getInitialState = function getInitialState() {
   return {
     running: true,
     entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)]),
+    automatedTrucks: false,
     placing: null,
     view: {
       width: VIEW_WIDTH,
@@ -243,8 +244,9 @@ var buyReducer = function buyReducer(state, action) {
   }
   factory.collected -= cost;
   if (action.entityType == 'automate trucks') {
-    // TODO implement buying automating trucks
-    return state;
+    return _extends({}, state, {
+      automatedTrucks: true
+    });
   }
   return _extends({}, state, {
     placing: action.entityType
@@ -1335,7 +1337,7 @@ module.exports = {
   CAB_COLOR: '#2f4f4f',
   TRUCK_CAPACITY: 16,
   TRUCK_COST: 80,
-  AUTOMATION_COST: 200,
+  AUTOMATION_COST: 0,
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',
@@ -1348,7 +1350,7 @@ module.exports = {
   BASE_COST: 400
 };
 },{}],19:[function(require,module,exports){
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -1365,7 +1367,7 @@ var React = require('React');
  * prop types:
  * title: the title of the card
  * content: an array of body lines for the card
- * action: optional, will create a button
+ * actions: optional array, will create buttons
  *    name: name on the button
  *    func: callback when the button is clicked
  *
@@ -1381,36 +1383,40 @@ var Card = function (_React$Component) {
   }
 
   _createClass(Card, [{
-    key: "render",
+    key: 'render',
     value: function render() {
-      var button = null;
-      if (this.props.action != null) {
-        button = React.createElement(
-          "button",
-          { onClick: this.props.action.func },
-          this.props.action.name
-        );
+      var buttons = [];
+      if (this.props.actions != null) {
+        buttons = this.props.actions.map(function (action) {
+          return React.createElement(
+            'button',
+            {
+              key: 'button_' + action.name,
+              onClick: action.func },
+            action.name
+          );
+        });
       }
       return React.createElement(
-        "div",
-        { className: "card" },
+        'div',
+        { className: 'card' },
         React.createElement(
-          "div",
-          { className: "cardTitle" },
+          'div',
+          { className: 'cardTitle' },
           React.createElement(
-            "b",
+            'b',
             null,
             this.props.title
           )
         ),
         this.props.content.map(function (line) {
           return React.createElement(
-            "p",
-            null,
+            'p',
+            { key: line },
             line
           );
         }),
-        button
+        buttons
       );
     }
   }]);
@@ -1470,10 +1476,43 @@ var Sidebar = function (_React$Component) {
         title: 'Rokenbok Factory',
         content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected] }));
 
+      // selection card
+      var title = 'Right click to select';
+      var content = ['Once you have selected something, right click anywhere else to deselect'];
+      var actions = [];
+      var selEntity = this.state.entities.filter(function (e) {
+        return e.selected;
+      })[0];
+      if (selEntity) {
+        if (selEntity.type == 'miner') {
+          title = 'Selected miner';
+          content = ['Use the arrows to point this miner towards boks. Deselect and it will mine back and forth automatically'];
+        }
+        if (selEntity.type == 'truck') {
+          title = 'Selected truck';
+          content = ['Use the arrows to drive the truck. Pick up boks from miners in the field or waiting at a base. Then drive them to the factory to deliver their cargo.', 'Buy "automate trucks" to record and play back their paths'];
+          if (this.state.automatedTrucks) {
+            content = ['Recorded actions will be played back indefinitely until you resume control.Record again to overwrite the previous recording'];
+            actions = [{ name: 'record', func: function func() {} }, { name: 'stop', func: function func() {} }, { name: 'play', func: function func() {} }];
+          }
+        }
+      }
+      cards.push(React.createElement(Card, {
+        key: 'selectionCard',
+        title: title,
+        content: content,
+        actions: actions
+      }));
+
+      // buy cards
       cards.push(makeBuyCard('miner', MINER_COST, dispatch));
       cards.push(makeBuyCard('truck', TRUCK_COST, dispatch));
       cards.push(makeBuyCard('base', BASE_COST, dispatch));
-      cards.push(makeBuyCard('automate trucks', AUTOMATION_COST, dispatch));
+
+      if (!this.state.automatedTrucks) {
+        cards.push(makeBuyCard('automate trucks', AUTOMATION_COST, dispatch));
+      }
+
       return React.createElement(
         'div',
         { className: 'sidebar' },
@@ -1494,13 +1533,13 @@ var makeBuyCard = function makeBuyCard(entityType, entityCost, dispatch) {
     key: "buy" + entityType + "Card",
     title: 'Buy ' + entityType,
     content: content,
-    action: {
+    actions: [{
       name: 'Buy',
       func: function func() {
         console.log(entityType);
         dispatch({ type: 'BUY', entityType: entityType });
       }
-    } });
+    }] });
 };
 
 module.exports = Sidebar;

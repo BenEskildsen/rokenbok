@@ -17,8 +17,10 @@ const buyReducer = (state, action) => {
   }
   factory.collected -= cost;
   if (action.entityType == 'automate trucks') {
-    // TODO implement buying automating trucks
-    return state;
+    return {
+      ...state,
+      automatedTrucks: true,
+    };
   }
   return {
     ...state,

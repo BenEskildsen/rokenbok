@@ -24,7 +24,7 @@ module.exports = {
   CAB_COLOR     : '#2f4f4f',
   TRUCK_CAPACITY: 16,
   TRUCK_COST    : 80,
-  AUTOMATION_COST: 200,
+  AUTOMATION_COST: 0,
 
   BOK_SIZE      : 5,
   BOK_COLOR     : 'brown',

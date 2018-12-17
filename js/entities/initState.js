@@ -18,6 +18,7 @@ const getInitialState = (): State => {
       make('miner', 75, -50),
       make('factory', FAC_POS_X, FAC_POS_Y),
     ],
+    automatedTrucks: false,
     placing: null,
     view: {
       width: VIEW_WIDTH,
