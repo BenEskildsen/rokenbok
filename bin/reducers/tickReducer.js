@@ -129,6 +129,7 @@ var computePhysics = function computePhysics(state) {
 
           if (collided(truckEntity, factoryEntity)) {
             factoryEntity.collected += truckEntity.carrying.length;
+            factoryEntity.totalCollected += truckEntity.carrying.length;
             truckEntity.carrying = [];
           }
         }
@@ -190,6 +191,7 @@ var computePhysics = function computePhysics(state) {
           }
           if (_entity2.type == 'factory' && collided(minerEntity, _entity2)) {
             _entity2.collected += minerEntity.carrying.length;
+            _entity2.totalCollected += minerEntity.carrying.length;
             minerEntity.carrying = [];
             turnMinerAround(minerEntity);
           }

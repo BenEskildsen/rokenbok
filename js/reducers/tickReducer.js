@@ -83,6 +83,7 @@ const computePhysics = (state): Array<Entity> => {
     for (const factoryEntity of factoryEntities) {
       if (collided(truckEntity, factoryEntity)) {
         factoryEntity.collected += truckEntity.carrying.length;
+        factoryEntity.totalCollected += truckEntity.carrying.length;
         truckEntity.carrying = [];
       }
     }
@@ -106,6 +107,7 @@ const computePhysics = (state): Array<Entity> => {
       }
       if (entity.type == 'factory' && collided(minerEntity, entity)) {
         entity.collected += minerEntity.carrying.length;
+        entity.totalCollected += minerEntity.carrying.length;
         minerEntity.carrying = [];
         turnMinerAround(minerEntity);
       }

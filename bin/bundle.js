@@ -145,6 +145,7 @@ var make = function make(type, x, y) {
     speed: 0, accel: 0,
     carrying: [],
     collected: 0, // for the factory
+    totalCollected: 0,
     selected: false,
     theta: Math.PI,
     prevTheta: Math.PI,
@@ -167,7 +168,7 @@ var _require = require('redux'),
 var _require2 = require('./reducers/rootReducer'),
     rootReducer = _require2.rootReducer;
 
-var Game = require('./ui/Game.react');
+var Sidebar = require('./ui/Sidebar.react');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
@@ -198,14 +199,14 @@ var gameRunner = {
 
 setControls(store, gameRunner);
 
-ReactDOM.render(React.createElement(Game, { store: store }), document.getElementById('container'));
+ReactDOM.render(React.createElement(Sidebar, { store: store }), document.getElementById('container'));
 
 initCanvas();
 store.subscribe(function () {
   return renderToCanvas(store.getState());
 });
 gameRunner.interval = gameRunner.start(store);
-},{"./controls":1,"./reducers/rootReducer":6,"./render/render":9,"./settings":16,"./ui/Game.react":17,"react":30,"react-dom":27,"redux":31}],5:[function(require,module,exports){
+},{"./controls":1,"./reducers/rootReducer":6,"./render/render":9,"./settings":16,"./ui/Sidebar.react":18,"react":31,"react-dom":28,"redux":32}],5:[function(require,module,exports){
 'use strict';
 
 var _require = require('../selectors'),
@@ -316,7 +317,7 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 module.exports = {
   entityReducer: entityReducer
 };
-},{"../selectors":15,"../settings":16,"../utils":18}],6:[function(require,module,exports){
+},{"../selectors":15,"../settings":16,"../utils":19}],6:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -490,6 +491,7 @@ var computePhysics = function computePhysics(state) {
 
           if (collided(truckEntity, factoryEntity)) {
             factoryEntity.collected += truckEntity.carrying.length;
+            factoryEntity.totalCollected += truckEntity.carrying.length;
             truckEntity.carrying = [];
           }
         }
@@ -551,6 +553,7 @@ var computePhysics = function computePhysics(state) {
           }
           if (_entity2.type == 'factory' && collided(minerEntity, _entity2)) {
             _entity2.collected += minerEntity.carrying.length;
+            _entity2.totalCollected += minerEntity.carrying.length;
             minerEntity.carrying = [];
             turnMinerAround(minerEntity);
           }
@@ -682,7 +685,7 @@ var collided = function collided(entityA, entityB) {
 module.exports = {
   tickReducer: tickReducer
 };
-},{"../selectors":15,"../settings":16,"../utils":18}],8:[function(require,module,exports){
+},{"../selectors":15,"../settings":16,"../utils":19}],8:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1159,7 +1162,7 @@ module.exports = {
   getWorldCoord: getWorldCoord,
   thetaToNearestBase: thetaToNearestBase
 };
-},{"./settings":16,"./utils":18}],16:[function(require,module,exports){
+},{"./settings":16,"./utils":19}],16:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -1197,6 +1200,82 @@ module.exports = {
 },{}],17:[function(require,module,exports){
 "use strict";
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var React = require('React');
+
+/**
+ *
+ * prop types:
+ * title: the title of the card
+ * content: an array of body lines for the card
+ * action: optional, will create a button
+ *    name: name on the button
+ *    func: callback when the button is clicked
+ *
+ */
+
+var Card = function (_React$Component) {
+  _inherits(Card, _React$Component);
+
+  function Card() {
+    _classCallCheck(this, Card);
+
+    return _possibleConstructorReturn(this, (Card.__proto__ || Object.getPrototypeOf(Card)).apply(this, arguments));
+  }
+
+  _createClass(Card, [{
+    key: "render",
+    value: function render() {
+      var _this2 = this;
+
+      var button = null;
+      if (this.props.action != null) {
+        button = React.createElement(
+          "button",
+          { onClick: function onClick() {
+              return _this2.props.action.func;
+            } },
+          this.props.action.name
+        );
+      }
+      return React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "cardTitle" },
+          React.createElement(
+            "b",
+            null,
+            this.props.title
+          )
+        ),
+        this.props.content.map(function (line) {
+          return React.createElement(
+            "p",
+            null,
+            line
+          );
+        }),
+        button
+      );
+    }
+  }]);
+
+  return Card;
+}(React.Component);
+
+module.exports = Card;
+},{"React":22}],18:[function(require,module,exports){
+'use strict';
+
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1208,14 +1287,15 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = require('React');
+var Card = require('./Card.react');
 
-var Game = function (_React$Component) {
-  _inherits(Game, _React$Component);
+var Sidebar = function (_React$Component) {
+  _inherits(Sidebar, _React$Component);
 
-  function Game(props) {
-    _classCallCheck(this, Game);
+  function Sidebar(props) {
+    _classCallCheck(this, Sidebar);
 
-    var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).call(this, props));
 
     props.store.subscribe(function () {
       return _this.setState(_extends({}, _this.props.store.getState()));
@@ -1224,38 +1304,36 @@ var Game = function (_React$Component) {
     return _this;
   }
 
-  _createClass(Game, [{
-    key: "onClick",
-    value: function onClick() {
-      console.log("on click");
-    }
+  _createClass(Sidebar, [{
+    key: 'onClick',
+    value: function onClick() {}
   }, {
-    key: "render",
+    key: 'render',
     value: function render() {
-      var _this2 = this;
-
       var dispatch = this.props.store.dispatch;
 
+      var cards = [];
+      var factory = this.state.entities.filter(function (e) {
+        return e.type == 'factory';
+      })[0];
+      cards.push(React.createElement(Card, {
+        key: 'titleCard',
+        title: 'Rokenbok Factory',
+        content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected] }));
 
       return React.createElement(
-        "div",
-        { className: "sidebar" },
-        React.createElement(
-          "button",
-          { onClick: function onClick() {
-              return _this2.onClick();
-            } },
-          "Click"
-        )
+        'div',
+        { className: 'sidebar' },
+        cards
       );
     }
   }]);
 
-  return Game;
+  return Sidebar;
 }(React.Component);
 
-module.exports = Game;
-},{"React":21}],18:[function(require,module,exports){
+module.exports = Sidebar;
+},{"./Card.react":17,"React":22}],19:[function(require,module,exports){
 'use strict';
 
 var floor = Math.floor,
@@ -1422,7 +1500,7 @@ module.exports = {
   bounce: bounce,
   distance: distance
 };
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -3266,7 +3344,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":40,"object-assign":22,"prop-types/checkPropTypes":23}],20:[function(require,module,exports){
+},{"_process":41,"object-assign":23,"prop-types/checkPropTypes":24}],21:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -3292,7 +3370,7 @@ _currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.P
 if(null!=b){void 0!==b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.3",
 __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":22}],21:[function(require,module,exports){
+},{"object-assign":23}],22:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3303,7 +3381,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":19,"./cjs/react.production.min.js":20,"_process":40}],22:[function(require,module,exports){
+},{"./cjs/react.development.js":20,"./cjs/react.production.min.js":21,"_process":41}],23:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -3395,7 +3473,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3490,7 +3568,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":24,"_process":40}],24:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":25,"_process":41}],25:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3504,7 +3582,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react-dom.development.js
@@ -23235,7 +23313,7 @@ module.exports = reactDom;
 }
 
 }).call(this,require('_process'))
-},{"_process":40,"object-assign":22,"prop-types/checkPropTypes":23,"react":30,"scheduler":36,"scheduler/tracing":37}],26:[function(require,module,exports){
+},{"_process":41,"object-assign":23,"prop-types/checkPropTypes":24,"react":31,"scheduler":37,"scheduler/tracing":38}],27:[function(require,module,exports){
 /** @license React v16.6.1
  * react-dom.production.min.js
  *
@@ -23486,7 +23564,7 @@ void 0:t("40");return a._reactRootContainer?(Oh(function(){$h(null,null,a,!1,fun
 Ka,La,Ca.injectEventPluginsByName,qa,Ra,function(a){za(a,Qa)},Ib,Jb,Jd,Ea]},unstable_createRoot:function(a,b){Yh(a)?void 0:t("299","unstable_createRoot");return new Xh(a,!0,null!=b&&!0===b.hydrate)}};(function(a){var b=a.findFiberByHostInstance;return Ve(n({},a,{findHostInstanceByFiber:function(a){a=nd(a);return null===a?null:a.stateNode},findFiberByHostInstance:function(a){return b?b(a):null}}))})({findFiberByHostInstance:Ia,bundleType:0,version:"16.6.3",rendererPackageName:"react-dom"});
 var ei={default:bi},fi=ei&&bi||ei;module.exports=fi.default||fi;
 
-},{"object-assign":22,"react":30,"scheduler":36}],27:[function(require,module,exports){
+},{"object-assign":23,"react":31,"scheduler":37}],28:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23528,13 +23606,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":25,"./cjs/react-dom.production.min.js":26,"_process":40}],28:[function(require,module,exports){
-arguments[4][19][0].apply(exports,arguments)
-},{"_process":40,"dup":19,"object-assign":22,"prop-types/checkPropTypes":23}],29:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":26,"./cjs/react-dom.production.min.js":27,"_process":41}],29:[function(require,module,exports){
 arguments[4][20][0].apply(exports,arguments)
-},{"dup":20,"object-assign":22}],30:[function(require,module,exports){
+},{"_process":41,"dup":20,"object-assign":23,"prop-types/checkPropTypes":24}],30:[function(require,module,exports){
 arguments[4][21][0].apply(exports,arguments)
-},{"./cjs/react.development.js":28,"./cjs/react.production.min.js":29,"_process":40,"dup":21}],31:[function(require,module,exports){
+},{"dup":21,"object-assign":23}],31:[function(require,module,exports){
+arguments[4][22][0].apply(exports,arguments)
+},{"./cjs/react.development.js":29,"./cjs/react.production.min.js":30,"_process":41,"dup":22}],32:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24185,7 +24263,7 @@ exports.compose = compose;
 exports.__DO_NOT_USE__ActionTypes = ActionTypes;
 
 }).call(this,require('_process'))
-},{"_process":40,"symbol-observable":38}],32:[function(require,module,exports){
+},{"_process":41,"symbol-observable":39}],33:[function(require,module,exports){
 (function (process){
 /** @license React v0.11.3
  * scheduler-tracing.development.js
@@ -24609,7 +24687,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 }
 
 }).call(this,require('_process'))
-},{"_process":40}],33:[function(require,module,exports){
+},{"_process":41}],34:[function(require,module,exports){
 /** @license React v0.11.3
  * scheduler-tracing.production.min.js
  *
@@ -24621,7 +24699,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 
 'use strict';Object.defineProperty(exports,"__esModule",{value:!0});var b=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.unstable_clear=function(a){return a()};exports.unstable_getCurrent=function(){return null};exports.unstable_getThreadID=function(){return++b};exports.unstable_trace=function(a,d,c){return c()};exports.unstable_wrap=function(a){return a};exports.unstable_subscribe=function(){};exports.unstable_unsubscribe=function(){};
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (process,global){
 /** @license React v0.11.3
  * scheduler.development.js
@@ -25259,7 +25337,7 @@ exports.unstable_shouldYield = unstable_shouldYield;
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":40}],35:[function(require,module,exports){
+},{"_process":41}],36:[function(require,module,exports){
 (function (global){
 /** @license React v0.11.3
  * scheduler.production.min.js
@@ -25284,7 +25362,7 @@ b=c.previous;b.next=c.previous=a;a.next=c;a.previous=b}return a};exports.unstabl
 exports.unstable_shouldYield=function(){return!f&&(null!==d&&d.expirationTime<l||w())};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25295,7 +25373,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":34,"./cjs/scheduler.production.min.js":35,"_process":40}],37:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":35,"./cjs/scheduler.production.min.js":36,"_process":41}],38:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25306,7 +25384,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler-tracing.development.js":32,"./cjs/scheduler-tracing.production.min.js":33,"_process":40}],38:[function(require,module,exports){
+},{"./cjs/scheduler-tracing.development.js":33,"./cjs/scheduler-tracing.production.min.js":34,"_process":41}],39:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -25338,7 +25416,7 @@ if (typeof self !== 'undefined') {
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ponyfill.js":39}],39:[function(require,module,exports){
+},{"./ponyfill.js":40}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25362,7 +25440,7 @@ function symbolObservablePonyfill(root) {
 
 	return result;
 };
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 

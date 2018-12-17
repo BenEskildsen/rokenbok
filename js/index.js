@@ -1,6 +1,6 @@
 const {createStore} = require('redux');
 const {rootReducer} = require('./reducers/rootReducer');
-const Game = require('./ui/Game.react');
+const Sidebar = require('./ui/Sidebar.react');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const {TICK_TIME} = require('./settings');
@@ -19,7 +19,7 @@ const gameRunner = {
 setControls(store, gameRunner);
 
 ReactDOM.render(
-  <Game store={store} />,
+  <Sidebar store={store} />,
   document.getElementById('container'),
 );
 

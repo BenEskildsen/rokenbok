@@ -6,7 +6,7 @@ var _require = require('redux'),
 var _require2 = require('./reducers/rootReducer'),
     rootReducer = _require2.rootReducer;
 
-var Game = require('./ui/Game.react');
+var Sidebar = require('./ui/Sidebar.react');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
@@ -37,7 +37,7 @@ var gameRunner = {
 
 setControls(store, gameRunner);
 
-ReactDOM.render(React.createElement(Game, { store: store }), document.getElementById('container'));
+ReactDOM.render(React.createElement(Sidebar, { store: store }), document.getElementById('container'));
 
 initCanvas();
 store.subscribe(function () {

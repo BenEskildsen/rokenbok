@@ -4,6 +4,7 @@ const make = (type, x, y) => {
     speed: 0, accel: 0,
     carrying: [],
     collected: 0, // for the factory
+    totalCollected: 0,
     selected: false,
     theta: Math.PI,
     prevTheta: Math.PI,
