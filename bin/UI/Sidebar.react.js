@@ -138,7 +138,7 @@ var formatMilestone = function formatMilestone(milestone) {
 
   var secsStr = String(totalSecs % 60).padStart(2, '0');
   var minsStr = String(floor(totalSecs / 60) % 60).padStart(2, '0');
-  var hoursStr = String(floor(totalSecs / 360)).padStart(2, '0');
+  var hoursStr = String(floor(totalSecs / 3600)).padStart(2, '0');
 
   return countStr + ' | ' + hoursStr + ':' + minsStr + ':' + secsStr;
 };

@@ -111,7 +111,7 @@ const formatMilestone = (milestone) => {
 
   const secsStr = String(totalSecs % 60).padStart(2, '0');
   const minsStr = String(floor(totalSecs / 60) % 60).padStart(2, '0');
-  const hoursStr = String(floor(totalSecs / 360)).padStart(2, '0');
+  const hoursStr = String(floor(totalSecs / 3600)).padStart(2, '0');
 
   return `${countStr} | ${hoursStr}:${minsStr}:${secsStr}`
 }
