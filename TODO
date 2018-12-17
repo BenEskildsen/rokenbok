@@ -1,6 +1,5 @@
 
  - - - - - - TODO - - - - - -
- - miners should stop and wait at base then drop off/pick up at trucks/factories
  - visualize what trucks/miners are carrying
  - UI + data structure for recording truck movements and playing back
  - UI for tracking collected boks
@@ -24,3 +23,4 @@
  - 'base' entity that miners move relative to
  - miners need UI/UX for setting direction away from base
  - miners should pick up boks they hit and turn around
+ - miners should stop and wait at base then drop off/pick up at trucks/factories

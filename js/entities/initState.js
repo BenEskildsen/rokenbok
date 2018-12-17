@@ -15,7 +15,7 @@ const getInitialState = (): State => {
       ...seedBoks(),
       make('base', 0, 0),
       make('truck', -50, -50),
-      make('miner', 75, 75),
+      make('miner', 75, -50),
       make('factory', FAC_POS_X, FAC_POS_Y),
     ],
     view: {
