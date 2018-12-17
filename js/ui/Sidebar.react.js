@@ -32,16 +32,16 @@ class Sidebar extends React.Component {
     if (selEntity) {
       if (selEntity.type == 'miner') {
         title = 'Selected miner';
-        content = ['Use the arrows to point this miner towards boks. Deselect and it will mine back and forth automatically'];
+        content = ['Use the arrows to point this miner towards boks. Deselect and it will mine back and forth automatically.'];
       }
       if (selEntity.type == 'truck') {
         title = 'Selected truck';
         content = [
           'Use the arrows to drive the truck. Pick up boks from miners in the field or waiting at a base. Then drive them to the factory to deliver their cargo.',
-          'Buy "automate trucks" to record and play back their paths',
+          'Buy "automate trucks" to record and play back their paths.',
         ];
         if (this.state.automatedTrucks) {
-          content = ['Recorded actions will be played back indefinitely until you resume control.Record again to overwrite the previous recording'];
+          content = ['Recorded actions will be played back indefinitely until you resume control. Record again to overwrite the previous recording.'];
           actions = [
             {name: 'record', func: () => {}},
             {name: 'stop', func: () => {}},

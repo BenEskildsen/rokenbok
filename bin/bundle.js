@@ -101,7 +101,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
-    VIEW_HEIGHT = _require.VIEW_HEIGHT;
+    VIEW_HEIGHT = _require.VIEW_HEIGHT,
+    INIT_VIEW_X = _require.INIT_VIEW_X,
+    INIT_VIEW_Y = _require.INIT_VIEW_Y;
 
 var _require2 = require('./makeEntity'),
     make = _require2.make;
@@ -118,8 +120,8 @@ var getInitialState = function getInitialState() {
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
-      x: 0,
-      y: 0,
+      x: INIT_VIEW_X,
+      y: INIT_VIEW_Y,
       dragging: false,
       dragStartX: 0,
       dragStartY: 0,
@@ -1319,6 +1321,8 @@ module.exports = {
   BACKGROUND_COLOR: '#deb887',
   SELECT_COLOR: 'red',
 
+  INIT_VIEW_X: -180,
+  INIT_VIEW_Y: -80,
   VIEW_WIDTH: 800,
   VIEW_HEIGHT: 600,
 
@@ -1486,13 +1490,13 @@ var Sidebar = function (_React$Component) {
       if (selEntity) {
         if (selEntity.type == 'miner') {
           title = 'Selected miner';
-          content = ['Use the arrows to point this miner towards boks. Deselect and it will mine back and forth automatically'];
+          content = ['Use the arrows to point this miner towards boks. Deselect and it will mine back and forth automatically.'];
         }
         if (selEntity.type == 'truck') {
           title = 'Selected truck';
-          content = ['Use the arrows to drive the truck. Pick up boks from miners in the field or waiting at a base. Then drive them to the factory to deliver their cargo.', 'Buy "automate trucks" to record and play back their paths'];
+          content = ['Use the arrows to drive the truck. Pick up boks from miners in the field or waiting at a base. Then drive them to the factory to deliver their cargo.', 'Buy "automate trucks" to record and play back their paths.'];
           if (this.state.automatedTrucks) {
-            content = ['Recorded actions will be played back indefinitely until you resume control.Record again to overwrite the previous recording'];
+            content = ['Recorded actions will be played back indefinitely until you resume control. Record again to overwrite the previous recording.'];
             actions = [{ name: 'record', func: function func() {} }, { name: 'stop', func: function func() {} }, { name: 'play', func: function func() {} }];
           }
         }

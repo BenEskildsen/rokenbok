@@ -6,6 +6,8 @@ module.exports = {
   BACKGROUND_COLOR: '#deb887',
   SELECT_COLOR: 'red',
 
+  INIT_VIEW_X: -180,
+  INIT_VIEW_Y: -80,
   VIEW_WIDTH: 800,
   VIEW_HEIGHT: 600,
 

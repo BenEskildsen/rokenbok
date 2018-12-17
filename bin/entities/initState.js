@@ -4,7 +4,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
-    VIEW_HEIGHT = _require.VIEW_HEIGHT;
+    VIEW_HEIGHT = _require.VIEW_HEIGHT,
+    INIT_VIEW_X = _require.INIT_VIEW_X,
+    INIT_VIEW_Y = _require.INIT_VIEW_Y;
 
 var _require2 = require('./makeEntity'),
     make = _require2.make;
@@ -21,8 +23,8 @@ var getInitialState = function getInitialState() {
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
-      x: 0,
-      y: 0,
+      x: INIT_VIEW_X,
+      y: INIT_VIEW_Y,
       dragging: false,
       dragStartX: 0,
       dragStartY: 0,

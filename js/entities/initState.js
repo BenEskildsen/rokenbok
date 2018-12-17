@@ -1,7 +1,8 @@
 // @flow
 
 const {
-  VIEW_WIDTH, VIEW_HEIGHT
+  VIEW_WIDTH, VIEW_HEIGHT,
+  INIT_VIEW_X, INIT_VIEW_Y,
 } = require('../settings');
 const {make} = require('./makeEntity');
 
@@ -23,8 +24,8 @@ const getInitialState = (): State => {
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
-      x: 0,
-      y: 0,
+      x: INIT_VIEW_X,
+      y: INIT_VIEW_Y,
       dragging: false,
       dragStartX: 0,
       dragStartY: 0,
