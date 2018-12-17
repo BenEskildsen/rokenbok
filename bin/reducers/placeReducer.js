@@ -23,7 +23,10 @@ var placeReducer = function placeReducer(state, action) {
     return state;
   }
 
-  entities.push(make(placing, x, y));
+  var entity = make(placing, x, y);
+  entity.selected = true;
+  entities.push(entity);
+
   return _extends({}, state, {
     entities: entities,
     placing: null

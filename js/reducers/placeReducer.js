@@ -12,7 +12,10 @@ const placeReducer = (state: State, action: Action): State => {
     return state;
   }
 
-  entities.push(make(placing, x, y));
+  const entity = make(placing, x, y);
+  entity.selected = true;
+  entities.push(entity);
+
   return {
     ...state,
     entities,
