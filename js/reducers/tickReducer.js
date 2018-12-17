@@ -70,26 +70,70 @@ const computePhysics = (state): Array<Entity> => {
           bok.shouldDestroy = true;
           entity.carrying = [bok];
           entity.theta = thetaToNearestBase(state, entity);
-          console.log(entity.theta);
         }
       }
     }
   }
-  
+
+  // Handle trucks dropping at factory
+  const truckEntities = entities.filter(entity => entity.type == 'truck');
+  const factoryEntities = entities.filter(entity => entity.type == 'factory');
+  for (const truckEntity of truckEntities) {
+    for (const factoryEntity of factoryEntities) {
+      if (collided(truckEntity, factoryEntity)) {
+        factoryEntity.collected += truckEntity.carrying.length;
+        truckEntity.carrying = [];
+      }
+    }
+  }
+
+
   // Handle miner collisions
   const minerEntities = entities.filter(entity => entity.type == 'miner');
   for (const minerEntity of minerEntities) {
-    for (const entity of entities) {
+    for (const entity of nonBokEntities) {
       // Give boks to base/factory/truck
-      if (entity.type.match(/^(base|factory|truck)$/) && collided(minerEntity, entity)) {
+      if (
+        entity.type == 'truck' &&
+        collided(minerEntity, entity) &&
+        entity.carrying.length < TRUCK_CAPACITY
+      ) {
         entity.carrying = entity.carrying.concat(minerEntity.carrying);
         minerEntity.carrying = [];
+        turnMinerAround(minerEntity);
+      }
+      if (entity.type == 'factory' && collided(minerEntity, entity)) {
+        entity.collected += minerEntity.carrying.length;
+        minerEntity.carrying = [];
+        turnMinerAround(minerEntity);
+      }
+      if (entity.type == 'base' && collided(minerEntity, entity)) {
+        minerEntity.speed = 0; // chill at the base until a truck comes
+        for (const truckEntity of truckEntities) {
+          if (
+            collided(entity, truckEntity) &&
+            truckEntity.carrying.length < TRUCK_CAPACITY
+          ) {
+            truckEntity.carrying = truckEntity.carrying.concat(minerEntity.carrying);
+            minerEntity.carrying = [];
+            turnMinerAround(minerEntity);
+          }
+        }
       }
     }
   }
 
   return entities.filter(entity => !entity.shouldDestroy);
 }
+
+const turnMinerAround = (minerEntity: Entity): void => {
+  minerEntity.theta += Math.PI;
+  minerEntity.speed = MINER_SPEED;
+  // can't quite turn around since we're still overlapping the base,
+  // push us out a bit
+  minerEntity.x += -1 * Math.sin(minerEntity.theta) * minerEntity.speed;
+  minerEntity.y += Math.cos(minerEntity.theta) * minerEntity.speed;
+};
 
 const collided = (entityA: Entity, entityB: Entity): boolean => {
   if (entityA == entityB) {
@@ -111,7 +155,7 @@ const collided = (entityA: Entity, entityB: Entity): boolean => {
       radiusA = FACTORY_SIZE / 2;
       break;
     case 'base':
-      radiusA = BASE_RADIUS / 2;
+      radiusA = BASE_RADIUS;
       break;
   }
   let radiusB = 0;
@@ -129,7 +173,7 @@ const collided = (entityA: Entity, entityB: Entity): boolean => {
       radiusB = FACTORY_SIZE / 2;
       break;
     case 'base':
-      radiusB = BASE_RADIUS / 2;
+      radiusB = BASE_RADIUS;
       break;
   }
 

@@ -13,11 +13,9 @@ var FAC_POS_X = 400;
 var FAC_POS_Y = 400;
 
 var getInitialState = function getInitialState() {
-  var truck = make('truck', -50, -50);
-  truck.carrying = [make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0)];
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), truck, make('miner', 75, 75), make('factory', FAC_POS_X, FAC_POS_Y)]),
+    entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)]),
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
