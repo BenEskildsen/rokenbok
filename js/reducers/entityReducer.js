@@ -10,6 +10,7 @@ const {distance} = require('../utils');
 const {max} = Math;
 
 const entityReducer = (state: State, action: Action): State => {
+  const selEntities = getSelectedEntities(state);
   switch (action.type) {
     case 'MAYBE_SELECT':
       deselectAll(state.entities);
@@ -22,35 +23,56 @@ const entityReducer = (state: State, action: Action): State => {
       }
       return state;
     case 'ACCELERATE': {
-      const selEntities = getSelectedEntities(state);
       if (selEntities.length == 0) {
         return state;
       }
       const entity = selEntities[0];
+      let maybeRecordingActions = entity.recording.actions[entity.recording.tick];
       if (entity.type == 'truck') {
-        entity.accel = entity.speed < TRUCK_SPEED ? TRUCK_ACCEL : 0;
+        truckAccel(entity);
+        if (entity.recording.recording) {
+          if (maybeRecordingActions == null) {
+            entity.recording.actions[entity.recording.tick] = [];
+            maybeRecordingActions = entity.recording.actions[entity.recording.tick];
+          }
+          maybeRecordingActions.push(action);
+        }
       }
       return state;
     }
     case 'DEACCELERATE': {
-      const selEntities = getSelectedEntities(state);
       if (selEntities.length == 0) {
         return state;
       }
       const entity = selEntities[0];
+      let maybeRecordingActions = entity.recording.actions[entity.recording.tick];
       if (entity.type == 'truck') {
-        entity.accel = entity.speed > 0 ? -1 * TRUCK_ACCEL : 0;
+        truckDeaccel(entity);
+        if (entity.recording.recording) {
+          if (maybeRecordingActions == null) {
+            entity.recording.actions[entity.recording.tick] = [];
+            maybeRecordingActions = entity.recording.actions[entity.recording.tick];
+          }
+          maybeRecordingActions.push(action);
+        }
       }
       return state;
     }
     case 'TURN': {
-      const selEntities = getSelectedEntities(state);
       if (selEntities.length == 0) {
         return state;
       }
       const entity = selEntities[0];
+      let maybeRecordingActions = entity.recording.actions[entity.recording.tick];
       if (entity.type == 'truck') {
-        entity.thetaSpeed = action.dir * TRUCK_TURN_SPEED;
+        truckTurn(entity, action.dir);
+        if (entity.recording.recording) {
+          if (maybeRecordingActions == null) {
+            entity.recording.actions[entity.recording.tick] = [];
+            maybeRecordingActions = entity.recording.actions[entity.recording.tick];
+          }
+          maybeRecordingActions.push(action);
+        }
       } else if (entity.type == 'miner') {
         entity.thetaSpeed = action.dir * MINER_TURN_SPEED;
       }
@@ -58,6 +80,18 @@ const entityReducer = (state: State, action: Action): State => {
     }
   }
 };
+
+const truckAccel = (entity) => {
+  entity.accel = entity.speed < TRUCK_SPEED ? TRUCK_ACCEL : 0;
+};
+
+const truckDeaccel = (entity) => {
+  entity.accel = entity.speed > 0 ? -1 * TRUCK_ACCEL : 0;
+};
+
+const truckTurn = (entity, dir) => {
+  entity.thetaSpeed = dir * TRUCK_TURN_SPEED;
+}
 
 const deselectAll = (entities: Array<Entity>): void => {
   entities.forEach(entity => {
@@ -92,4 +126,7 @@ const maybeSelect = (entities: Array<Entity>, worldCoord: {x: number, y: number}
 
 module.exports = {
   entityReducer,
+  truckAccel,
+  truckTurn,
+  truckDeaccel,
 };

@@ -13,6 +13,9 @@ const {
 } = require('../settings');
 const {distance} = require('../utils');
 const {thetaToNearestBase, getBokCollected} = require('../selectors');
+const {
+  truckTurn, truckAccel, truckDeaccel,
+} = require('./entityReducer');
 
 const tickReducer = (state: State, action: Action): State => {
   const imgCount = state.view.imgCount;
@@ -22,7 +25,7 @@ const tickReducer = (state: State, action: Action): State => {
     image = null;
     shouldRender = true;
   }
- 
+
   const totalBokCollected = getBokCollected(state);
   let {bokMilestones, nextBokMilestone} = state;
   if (totalBokCollected >= nextBokMilestone) {
@@ -47,8 +50,38 @@ const tickReducer = (state: State, action: Action): State => {
 
 const computePhysics = (state): Array<Entity> => {
   const entities = state.entities;
-  // Update speeds and positions
   const nonBokEntities = entities.filter(entity => entity.type != 'bok');
+
+  // Update ongoing recordings/playbacks
+  for (const entity of nonBokEntities) {
+    if (entity.recording.recording) {
+      entity.recording.tick++;
+    }
+    if (entity.recording.playing) {
+      entity.recording.tick++;
+      if (entity.recording.tick == entity.recording.endTick) {
+        entity.recording.tick = 0;
+      }
+      const actions = entity.recording.actions[entity.recording.tick];
+      if (actions) {
+        for (const action of actions) {
+          switch (action.type) {
+            case 'ACCELERATE':
+              truckAccel(entity);
+              break;
+            case 'DEACCELERATE':
+              truckDeaccel(entity);
+              break;
+            case 'TURN':
+              truckTurn(entity, action.dir);
+              break;
+          }
+        }
+      }
+    }
+  }
+
+  // Update speeds and positions
   for (const entity of nonBokEntities) {
     entity.speed += entity.accel;
     entity.prevTheta = entity.theta;

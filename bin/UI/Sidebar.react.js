@@ -70,7 +70,15 @@ var Sidebar = function (_React$Component) {
           content = ['Use the arrows to drive the truck. Pick up boks from miners in the field or waiting at a base. Then drive them to the factory to deliver their cargo.', 'Buy "automate trucks" to record and play back their paths.'];
           if (this.state.automatedTrucks) {
             content = ['Recorded actions will be played back indefinitely until you resume control. Record again to overwrite the previous recording.'];
-            actions = [{ name: 'record', func: function func() {} }, { name: 'stop', func: function func() {} }, { name: 'play', func: function func() {} }];
+            var recordingName = selEntity.recording.recording ? 'recording' : 'record';
+            var playingName = selEntity.recording.playing ? 'playing' : 'play';
+            actions = [{ name: recordingName, func: function func() {
+                return dispatch({ type: 'RECORD' });
+              } }, { name: 'stop', func: function func() {
+                return dispatch({ type: 'STOP' });
+              } }, { name: playingName, func: function func() {
+                return dispatch({ type: 'PLAY' });
+              } }];
           }
         }
       }

@@ -20,6 +20,11 @@ var _require3 = require('../selectors'),
     thetaToNearestBase = _require3.thetaToNearestBase,
     getBokCollected = _require3.getBokCollected;
 
+var _require4 = require('./entityReducer'),
+    truckTurn = _require4.truckTurn,
+    truckAccel = _require4.truckAccel,
+    truckDeaccel = _require4.truckDeaccel;
+
 var tickReducer = function tickReducer(state, action) {
   var imgCount = state.view.imgCount;
   var image = state.view.image;
@@ -55,10 +60,11 @@ var tickReducer = function tickReducer(state, action) {
 
 var computePhysics = function computePhysics(state) {
   var entities = state.entities;
-  // Update speeds and positions
   var nonBokEntities = entities.filter(function (entity) {
     return entity.type != 'bok';
   });
+
+  // Update ongoing recordings/playbacks
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
@@ -67,22 +73,55 @@ var computePhysics = function computePhysics(state) {
     for (var _iterator = nonBokEntities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var _entity = _step.value;
 
-      _entity.speed += _entity.accel;
-      _entity.prevTheta = _entity.theta;
-      _entity.theta += _entity.thetaSpeed;
-      if (_entity.type == 'truck') {
-        _entity.speed = _entity.speed > TRUCK_SPEED ? TRUCK_SPEED : _entity.speed;
-      } else if (_entity.type == 'miner') {
-        _entity.speed = _entity.speed > MINER_SPEED ? MINER_SPEED : _entity.speed;
+      if (_entity.recording.recording) {
+        _entity.recording.tick++;
       }
-      _entity.speed = _entity.speed < 0 ? 0 : _entity.speed; // NOTE: can't reverse
-      _entity.prevX = _entity.x;
-      _entity.prevY = _entity.y;
-      _entity.x += -1 * Math.sin(_entity.theta) * _entity.speed;
-      _entity.y += Math.cos(_entity.theta) * _entity.speed;
+      if (_entity.recording.playing) {
+        _entity.recording.tick++;
+        if (_entity.recording.tick == _entity.recording.endTick) {
+          _entity.recording.tick = 0;
+        }
+        var actions = _entity.recording.actions[_entity.recording.tick];
+        if (actions) {
+          var _iteratorNormalCompletion5 = true;
+          var _didIteratorError5 = false;
+          var _iteratorError5 = undefined;
+
+          try {
+            for (var _iterator5 = actions[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+              var action = _step5.value;
+
+              switch (action.type) {
+                case 'ACCELERATE':
+                  truckAccel(_entity);
+                  break;
+                case 'DEACCELERATE':
+                  truckDeaccel(_entity);
+                  break;
+                case 'TURN':
+                  truckTurn(_entity, action.dir);
+                  break;
+              }
+            }
+          } catch (err) {
+            _didIteratorError5 = true;
+            _iteratorError5 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                _iterator5.return();
+              }
+            } finally {
+              if (_didIteratorError5) {
+                throw _iteratorError5;
+              }
+            }
+          }
+        }
+      }
     }
 
-    // Handle bok collisions
+    // Update speeds and positions
   } catch (err) {
     _didIteratorError = true;
     _iteratorError = err;
@@ -94,6 +133,45 @@ var computePhysics = function computePhysics(state) {
     } finally {
       if (_didIteratorError) {
         throw _iteratorError;
+      }
+    }
+  }
+
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = nonBokEntities[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var _entity2 = _step2.value;
+
+      _entity2.speed += _entity2.accel;
+      _entity2.prevTheta = _entity2.theta;
+      _entity2.theta += _entity2.thetaSpeed;
+      if (_entity2.type == 'truck') {
+        _entity2.speed = _entity2.speed > TRUCK_SPEED ? TRUCK_SPEED : _entity2.speed;
+      } else if (_entity2.type == 'miner') {
+        _entity2.speed = _entity2.speed > MINER_SPEED ? MINER_SPEED : _entity2.speed;
+      }
+      _entity2.speed = _entity2.speed < 0 ? 0 : _entity2.speed; // NOTE: can't reverse
+      _entity2.prevX = _entity2.x;
+      _entity2.prevY = _entity2.y;
+      _entity2.x += -1 * Math.sin(_entity2.theta) * _entity2.speed;
+      _entity2.y += Math.cos(_entity2.theta) * _entity2.speed;
+    }
+
+    // Handle bok collisions
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+        _iterator2.return();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
       }
     }
   }
@@ -128,20 +206,20 @@ var computePhysics = function computePhysics(state) {
   var factoryEntities = entities.filter(function (entity) {
     return entity.type == 'factory';
   });
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
+  var _iteratorNormalCompletion3 = true;
+  var _didIteratorError3 = false;
+  var _iteratorError3 = undefined;
 
   try {
-    for (var _iterator2 = truckEntities[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var truckEntity = _step2.value;
-      var _iteratorNormalCompletion4 = true;
-      var _didIteratorError4 = false;
-      var _iteratorError4 = undefined;
+    for (var _iterator3 = truckEntities[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+      var truckEntity = _step3.value;
+      var _iteratorNormalCompletion6 = true;
+      var _didIteratorError6 = false;
+      var _iteratorError6 = undefined;
 
       try {
-        for (var _iterator4 = factoryEntities[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-          var factoryEntity = _step4.value;
+        for (var _iterator6 = factoryEntities[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+          var factoryEntity = _step6.value;
 
           if (collided(truckEntity, factoryEntity)) {
             factoryEntity.collected += truckEntity.carrying.length;
@@ -150,118 +228,22 @@ var computePhysics = function computePhysics(state) {
           }
         }
       } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion4 && _iterator4.return) {
-            _iterator4.return();
+          if (!_iteratorNormalCompletion6 && _iterator6.return) {
+            _iterator6.return();
           }
         } finally {
-          if (_didIteratorError4) {
-            throw _iteratorError4;
+          if (_didIteratorError6) {
+            throw _iteratorError6;
           }
         }
       }
     }
 
     // Handle miner collisions
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2.return) {
-        _iterator2.return();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
-  }
-
-  var minerEntities = entities.filter(function (entity) {
-    return entity.type == 'miner';
-  });
-  var _iteratorNormalCompletion3 = true;
-  var _didIteratorError3 = false;
-  var _iteratorError3 = undefined;
-
-  try {
-    for (var _iterator3 = minerEntities[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-      var minerEntity = _step3.value;
-      var _iteratorNormalCompletion5 = true;
-      var _didIteratorError5 = false;
-      var _iteratorError5 = undefined;
-
-      try {
-        for (var _iterator5 = nonBokEntities[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-          var _entity2 = _step5.value;
-
-          // Give boks to base/factory/truck
-          if (_entity2.type == 'truck' && collided(minerEntity, _entity2) && _entity2.carrying.length < TRUCK_CAPACITY && minerEntity.carrying.length > 0) {
-            _entity2.carrying = _entity2.carrying.concat(minerEntity.carrying);
-            minerEntity.carrying = [];
-            turnMinerAround(minerEntity);
-          }
-          if (_entity2.type == 'factory' && collided(minerEntity, _entity2)) {
-            _entity2.collected += minerEntity.carrying.length;
-            _entity2.totalCollected += minerEntity.carrying.length;
-            minerEntity.carrying = [];
-            turnMinerAround(minerEntity);
-          }
-          if (_entity2.type == 'base' && collided(minerEntity, _entity2)) {
-            if (minerEntity.carrying.length == 0) {
-              turnMinerAround(minerEntity);
-              break;
-            }
-            minerEntity.speed = 0; // chill at the base until a truck comes
-            var _iteratorNormalCompletion6 = true;
-            var _didIteratorError6 = false;
-            var _iteratorError6 = undefined;
-
-            try {
-              for (var _iterator6 = truckEntities[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-                var _truckEntity = _step6.value;
-
-                if (collided(_entity2, _truckEntity) && _truckEntity.carrying.length < TRUCK_CAPACITY) {
-                  _truckEntity.carrying = _truckEntity.carrying.concat(minerEntity.carrying);
-                  minerEntity.carrying = [];
-                  turnMinerAround(minerEntity);
-                }
-              }
-            } catch (err) {
-              _didIteratorError6 = true;
-              _iteratorError6 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion6 && _iterator6.return) {
-                  _iterator6.return();
-                }
-              } finally {
-                if (_didIteratorError6) {
-                  throw _iteratorError6;
-                }
-              }
-            }
-          }
-        }
-      } catch (err) {
-        _didIteratorError5 = true;
-        _iteratorError5 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion5 && _iterator5.return) {
-            _iterator5.return();
-          }
-        } finally {
-          if (_didIteratorError5) {
-            throw _iteratorError5;
-          }
-        }
-      }
-    }
   } catch (err) {
     _didIteratorError3 = true;
     _iteratorError3 = err;
@@ -273,6 +255,102 @@ var computePhysics = function computePhysics(state) {
     } finally {
       if (_didIteratorError3) {
         throw _iteratorError3;
+      }
+    }
+  }
+
+  var minerEntities = entities.filter(function (entity) {
+    return entity.type == 'miner';
+  });
+  var _iteratorNormalCompletion4 = true;
+  var _didIteratorError4 = false;
+  var _iteratorError4 = undefined;
+
+  try {
+    for (var _iterator4 = minerEntities[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+      var minerEntity = _step4.value;
+      var _iteratorNormalCompletion7 = true;
+      var _didIteratorError7 = false;
+      var _iteratorError7 = undefined;
+
+      try {
+        for (var _iterator7 = nonBokEntities[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+          var _entity3 = _step7.value;
+
+          // Give boks to base/factory/truck
+          if (_entity3.type == 'truck' && collided(minerEntity, _entity3) && _entity3.carrying.length < TRUCK_CAPACITY && minerEntity.carrying.length > 0) {
+            _entity3.carrying = _entity3.carrying.concat(minerEntity.carrying);
+            minerEntity.carrying = [];
+            turnMinerAround(minerEntity);
+          }
+          if (_entity3.type == 'factory' && collided(minerEntity, _entity3)) {
+            _entity3.collected += minerEntity.carrying.length;
+            _entity3.totalCollected += minerEntity.carrying.length;
+            minerEntity.carrying = [];
+            turnMinerAround(minerEntity);
+          }
+          if (_entity3.type == 'base' && collided(minerEntity, _entity3)) {
+            if (minerEntity.carrying.length == 0) {
+              turnMinerAround(minerEntity);
+              break;
+            }
+            minerEntity.speed = 0; // chill at the base until a truck comes
+            var _iteratorNormalCompletion8 = true;
+            var _didIteratorError8 = false;
+            var _iteratorError8 = undefined;
+
+            try {
+              for (var _iterator8 = truckEntities[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+                var _truckEntity = _step8.value;
+
+                if (collided(_entity3, _truckEntity) && _truckEntity.carrying.length < TRUCK_CAPACITY) {
+                  _truckEntity.carrying = _truckEntity.carrying.concat(minerEntity.carrying);
+                  minerEntity.carrying = [];
+                  turnMinerAround(minerEntity);
+                }
+              }
+            } catch (err) {
+              _didIteratorError8 = true;
+              _iteratorError8 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion8 && _iterator8.return) {
+                  _iterator8.return();
+                }
+              } finally {
+                if (_didIteratorError8) {
+                  throw _iteratorError8;
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        _didIteratorError7 = true;
+        _iteratorError7 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion7 && _iterator7.return) {
+            _iterator7.return();
+          }
+        } finally {
+          if (_didIteratorError7) {
+            throw _iteratorError7;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    _didIteratorError4 = true;
+    _iteratorError4 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion4 && _iterator4.return) {
+        _iterator4.return();
+      }
+    } finally {
+      if (_didIteratorError4) {
+        throw _iteratorError4;
       }
     }
   }

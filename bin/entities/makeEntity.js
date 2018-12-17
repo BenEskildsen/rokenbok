@@ -13,7 +13,13 @@ var make = function make(type, x, y) {
     thetaSpeed: 0,
     type: type,
     prevX: x,
-    prevY: y
+    prevY: y,
+    recording: {
+      recording: false,
+      playing: false,
+      tick: 0,
+      actions: {}
+    }
   };
 };
 

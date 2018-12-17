@@ -1,6 +1,7 @@
 // @flow
 
 const {getInitialState} = require('../entities/initState');
+const {recordReducer} = require('./recordReducer');
 const {entityReducer} = require('./entityReducer');
 const {tickReducer} = require('./tickReducer');
 const {viewReducer} = require('./viewReducer');
@@ -25,6 +26,10 @@ const rootReducer = (state: State, action: Action): State => {
     case 'MOUSE_DOWN':
     case 'MOUSE_UP':
       return viewReducer(state, action);
+    case 'RECORD':
+    case 'STOP':
+    case 'PLAY':
+      return recordReducer(state, action);
     case 'MAYBE_SELECT':
     case 'ACCELERATE':
     case 'DEACCELERATE':

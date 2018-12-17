@@ -21,6 +21,7 @@ var max = Math.max;
 
 
 var entityReducer = function entityReducer(state, action) {
+  var selEntities = getSelectedEntities(state);
   switch (action.type) {
     case 'MAYBE_SELECT':
       deselectAll(state.entities);
@@ -31,43 +32,76 @@ var entityReducer = function entityReducer(state, action) {
       return state;
     case 'ACCELERATE':
       {
-        var selEntities = getSelectedEntities(state);
         if (selEntities.length == 0) {
           return state;
         }
         var entity = selEntities[0];
+        var maybeRecordingActions = entity.recording.actions[entity.recording.tick];
         if (entity.type == 'truck') {
-          entity.accel = entity.speed < TRUCK_SPEED ? TRUCK_ACCEL : 0;
+          truckAccel(entity);
+          if (entity.recording.recording) {
+            if (maybeRecordingActions == null) {
+              entity.recording.actions[entity.recording.tick] = [];
+              maybeRecordingActions = entity.recording.actions[entity.recording.tick];
+            }
+            maybeRecordingActions.push(action);
+          }
         }
         return state;
       }
     case 'DEACCELERATE':
       {
-        var _selEntities = getSelectedEntities(state);
-        if (_selEntities.length == 0) {
+        if (selEntities.length == 0) {
           return state;
         }
-        var _entity = _selEntities[0];
+        var _entity = selEntities[0];
+        var _maybeRecordingActions = _entity.recording.actions[_entity.recording.tick];
         if (_entity.type == 'truck') {
-          _entity.accel = _entity.speed > 0 ? -1 * TRUCK_ACCEL : 0;
+          truckDeaccel(_entity);
+          if (_entity.recording.recording) {
+            if (_maybeRecordingActions == null) {
+              _entity.recording.actions[_entity.recording.tick] = [];
+              _maybeRecordingActions = _entity.recording.actions[_entity.recording.tick];
+            }
+            _maybeRecordingActions.push(action);
+          }
         }
         return state;
       }
     case 'TURN':
       {
-        var _selEntities2 = getSelectedEntities(state);
-        if (_selEntities2.length == 0) {
+        if (selEntities.length == 0) {
           return state;
         }
-        var _entity2 = _selEntities2[0];
+        var _entity2 = selEntities[0];
+        var _maybeRecordingActions2 = _entity2.recording.actions[_entity2.recording.tick];
         if (_entity2.type == 'truck') {
-          _entity2.thetaSpeed = action.dir * TRUCK_TURN_SPEED;
+          truckTurn(_entity2, action.dir);
+          if (_entity2.recording.recording) {
+            if (_maybeRecordingActions2 == null) {
+              _entity2.recording.actions[_entity2.recording.tick] = [];
+              _maybeRecordingActions2 = _entity2.recording.actions[_entity2.recording.tick];
+            }
+            _maybeRecordingActions2.push(action);
+          }
         } else if (_entity2.type == 'miner') {
           _entity2.thetaSpeed = action.dir * MINER_TURN_SPEED;
         }
         return state;
       }
   }
+};
+
+var truckAccel = function truckAccel(entity) {
+  entity.accel = entity.speed < TRUCK_SPEED ? TRUCK_ACCEL : 0;
+};
+
+var truckDeaccel = function truckDeaccel(entity) {
+  entity.accel = entity.speed > 0 ? -1 * TRUCK_ACCEL : 0;
+};
+
+var truckTurn = function truckTurn(entity, dir) {
+  entity.thetaSpeed = dir * TRUCK_TURN_SPEED;
 };
 
 var deselectAll = function deselectAll(entities) {
@@ -106,5 +140,8 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 };
 
 module.exports = {
-  entityReducer: entityReducer
+  entityReducer: entityReducer,
+  truckAccel: truckAccel,
+  truckTurn: truckTurn,
+  truckDeaccel: truckDeaccel
 };

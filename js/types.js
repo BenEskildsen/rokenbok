@@ -13,6 +13,13 @@ export type Entity = {
   prevTheta: number,
   prevX: number,
   prevY: number,
+  recording: {
+    recording: boolean,
+    playing: boolean,
+    tick: number,
+    endTick: number,
+    actions: {[tick: number]: Array<Action>},
+  },
 };
 
 export type State = {

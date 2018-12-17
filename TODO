@@ -1,8 +1,6 @@
 
  - - - - - - TODO - - - - - -
- - UI + data structure for recording truck movements and playing back
  - Implement buying/placing as a queue instead of a single value
- - Implement timer in background
 
 
  - - - - - - PROBABLY DON'T ACTUALLY NEED (UPON FURTHER REFLECTION) - - - - - -
@@ -28,3 +26,5 @@
  - placing selects the new entity
  - UI card explaining how selected miners work
  - Implement buying automating trucks
+ - UI + data structure for recording truck movements and playing back
+ - Implement timer in background

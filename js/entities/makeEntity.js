@@ -12,6 +12,12 @@ const make = (type, x, y) => {
     type,
     prevX: x,
     prevY: y,
+    recording: {
+      recording: false,
+      playing: false,
+      tick: 0,
+      actions: {},
+    },
   };
 }
 

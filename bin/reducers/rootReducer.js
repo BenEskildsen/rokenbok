@@ -5,20 +5,23 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 var _require = require('../entities/initState'),
     getInitialState = _require.getInitialState;
 
-var _require2 = require('./entityReducer'),
-    entityReducer = _require2.entityReducer;
+var _require2 = require('./recordReducer'),
+    recordReducer = _require2.recordReducer;
 
-var _require3 = require('./tickReducer'),
-    tickReducer = _require3.tickReducer;
+var _require3 = require('./entityReducer'),
+    entityReducer = _require3.entityReducer;
 
-var _require4 = require('./viewReducer'),
-    viewReducer = _require4.viewReducer;
+var _require4 = require('./tickReducer'),
+    tickReducer = _require4.tickReducer;
 
-var _require5 = require('./placeReducer'),
-    placeReducer = _require5.placeReducer;
+var _require5 = require('./viewReducer'),
+    viewReducer = _require5.viewReducer;
 
-var _require6 = require('./buyReducer'),
-    buyReducer = _require6.buyReducer;
+var _require6 = require('./placeReducer'),
+    placeReducer = _require6.placeReducer;
+
+var _require7 = require('./buyReducer'),
+    buyReducer = _require7.buyReducer;
 
 var rootReducer = function rootReducer(state, action) {
   if (state === undefined) return getInitialState();
@@ -35,6 +38,10 @@ var rootReducer = function rootReducer(state, action) {
     case 'MOUSE_DOWN':
     case 'MOUSE_UP':
       return viewReducer(state, action);
+    case 'RECORD':
+    case 'STOP':
+    case 'PLAY':
+      return recordReducer(state, action);
     case 'MAYBE_SELECT':
     case 'ACCELERATE':
     case 'DEACCELERATE':
