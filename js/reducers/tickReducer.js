@@ -81,7 +81,11 @@ const computePhysics = (state): Array<Entity> => {
   for (const minerEntity of minerEntities) {
     for (const entity of nonBokEntities) {
       // Give boks to base/factory/truck
-      if (entity.type == 'truck' && collided(minerEntity, entity)) {
+      if (
+        entity.type == 'truck' &&
+        collided(minerEntity, entity) &&
+        entity.carrying.length < TRUCK_CAPACITY
+      ) {
         entity.carrying = entity.carrying.concat(minerEntity.carrying);
         minerEntity.carrying = [];
         turnMinerAround(minerEntity);
@@ -94,7 +98,10 @@ const computePhysics = (state): Array<Entity> => {
       if (entity.type == 'base' && collided(minerEntity, entity)) {
         minerEntity.speed = 0; // chill at the base until a truck comes
         for (const truckEntity of truckEntities) {
-          if (collided(entity, truckEntity)) {
+          if (
+            collided(entity, truckEntity) &&
+            truckEntity.carrying.length < TRUCK_CAPACITY
+          ) {
             truckEntity.carrying = truckEntity.carrying.concat(minerEntity.carrying);
             minerEntity.carrying = [];
             turnMinerAround(minerEntity);
