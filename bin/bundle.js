@@ -19,9 +19,16 @@ var setControls = function setControls(store, gameRunner) {
   };
 
   canvas.onmouseup = function (ev) {
+    var x = ev.clientX - rect.left;
+    var y = ev.clientY - rect.top;
     if (ev.button == 0) {
-      // left click, 2 for right click
+      // left click
       store.dispatch({ type: 'MOUSE_UP' });
+    }
+
+    if (ev.button == 2) {
+      // right click
+      store.dispatch({ type: 'PLACE', x: x, y: y });
     }
   };
 
@@ -326,12 +333,16 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 var _require = require('../entities/makeEntity'),
     make = _require.make;
 
+var _require2 = require('../selectors'),
+    getWorldCoord = _require2.getWorldCoord;
+
 var placeReducer = function placeReducer(state, action) {
   var entities = state.entities,
       placing = state.placing;
-  var x = action.x,
-      y = action.y;
 
+  var _getWorldCoord = getWorldCoord(state, action.x, action.y),
+      x = _getWorldCoord.x,
+      y = _getWorldCoord.y;
 
   if (placing === null) {
     return state;
@@ -348,7 +359,7 @@ var placeReducer = function placeReducer(state, action) {
 module.exports = {
   placeReducer: placeReducer
 };
-},{"../entities/makeEntity":3}],7:[function(require,module,exports){
+},{"../entities/makeEntity":3,"../selectors":16}],7:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };

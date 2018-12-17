@@ -15,8 +15,14 @@ const setControls = (store, gameRunner) => {
   };
 
   canvas.onmouseup = (ev) => {
-    if (ev.button == 0) { // left click, 2 for right click
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
+    if (ev.button == 0) { // left click
       store.dispatch({type: 'MOUSE_UP'});
+    }
+
+    if (ev.button == 2) { // right click
+      store.dispatch({type: 'PLACE', x, y});
     }
   };
 

@@ -18,9 +18,16 @@ var setControls = function setControls(store, gameRunner) {
   };
 
   canvas.onmouseup = function (ev) {
+    var x = ev.clientX - rect.left;
+    var y = ev.clientY - rect.top;
     if (ev.button == 0) {
-      // left click, 2 for right click
+      // left click
       store.dispatch({ type: 'MOUSE_UP' });
+    }
+
+    if (ev.button == 2) {
+      // right click
+      store.dispatch({ type: 'PLACE', x: x, y: y });
     }
   };
 
