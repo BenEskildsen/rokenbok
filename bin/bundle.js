@@ -125,7 +125,7 @@ var seedBoks = function seedBoks() {
   var boks = [];
   for (var x = -1000; x < 1000; x += 5) {
     for (var y = -1000; y < 1000; y += 5) {
-      if (Math.sqrt(x * x + y * y) >= 400 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 400) {
+      if (Math.sqrt(x * x + y * y) >= 200 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 600) {
         boks.push(make('bok', x, y));
       }
     }
@@ -544,7 +544,7 @@ var computePhysics = function computePhysics(state) {
           var _entity2 = _step5.value;
 
           // Give boks to base/factory/truck
-          if (_entity2.type == 'truck' && collided(minerEntity, _entity2) && _entity2.carrying.length < TRUCK_CAPACITY) {
+          if (_entity2.type == 'truck' && collided(minerEntity, _entity2) && _entity2.carrying.length < TRUCK_CAPACITY && minerEntity.carrying.length > 0) {
             _entity2.carrying = _entity2.carrying.concat(minerEntity.carrying);
             minerEntity.carrying = [];
             turnMinerAround(minerEntity);
@@ -555,6 +555,10 @@ var computePhysics = function computePhysics(state) {
             turnMinerAround(minerEntity);
           }
           if (_entity2.type == 'base' && collided(minerEntity, _entity2)) {
+            if (minerEntity.carrying.length == 0) {
+              turnMinerAround(minerEntity);
+              break;
+            }
             minerEntity.speed = 0; // chill at the base until a truck comes
             var _iteratorNormalCompletion6 = true;
             var _didIteratorError6 = false;

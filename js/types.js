@@ -18,6 +18,7 @@ export type Entity = {
 export type State = {
   running: boolean,
   entities: Array<Entity>,
+  placing: ?string, // which entity type we're placing
   view: {
     width: number,
     height: number,

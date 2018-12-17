@@ -97,7 +97,8 @@ const computePhysics = (state): Array<Entity> => {
       if (
         entity.type == 'truck' &&
         collided(minerEntity, entity) &&
-        entity.carrying.length < TRUCK_CAPACITY
+        entity.carrying.length < TRUCK_CAPACITY &&
+        minerEntity.carrying.length > 0
       ) {
         entity.carrying = entity.carrying.concat(minerEntity.carrying);
         minerEntity.carrying = [];
@@ -109,6 +110,10 @@ const computePhysics = (state): Array<Entity> => {
         turnMinerAround(minerEntity);
       }
       if (entity.type == 'base' && collided(minerEntity, entity)) {
+        if (minerEntity.carrying.length == 0) {
+          turnMinerAround(minerEntity);
+          break;
+        }
         minerEntity.speed = 0; // chill at the base until a truck comes
         for (const truckEntity of truckEntities) {
           if (

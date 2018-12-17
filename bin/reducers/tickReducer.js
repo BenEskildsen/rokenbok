@@ -183,7 +183,7 @@ var computePhysics = function computePhysics(state) {
           var _entity2 = _step5.value;
 
           // Give boks to base/factory/truck
-          if (_entity2.type == 'truck' && collided(minerEntity, _entity2) && _entity2.carrying.length < TRUCK_CAPACITY) {
+          if (_entity2.type == 'truck' && collided(minerEntity, _entity2) && _entity2.carrying.length < TRUCK_CAPACITY && minerEntity.carrying.length > 0) {
             _entity2.carrying = _entity2.carrying.concat(minerEntity.carrying);
             minerEntity.carrying = [];
             turnMinerAround(minerEntity);
@@ -194,6 +194,10 @@ var computePhysics = function computePhysics(state) {
             turnMinerAround(minerEntity);
           }
           if (_entity2.type == 'base' && collided(minerEntity, _entity2)) {
+            if (minerEntity.carrying.length == 0) {
+              turnMinerAround(minerEntity);
+              break;
+            }
             minerEntity.speed = 0; // chill at the base until a truck comes
             var _iteratorNormalCompletion6 = true;
             var _didIteratorError6 = false;
