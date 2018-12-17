@@ -42,8 +42,6 @@ var tickReducer = function tickReducer(state, action) {
     var timeElapsed = Date.now() - state.startTime;
     bokMilestones.push({ count: nextBokMilestone, time: timeElapsed });
     nextBokMilestone *= 10;
-    console.log(bokMilestones);
-    console.log(nextBokMilestone);
   }
 
   return _extends({}, state, {

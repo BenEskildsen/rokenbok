@@ -636,8 +636,6 @@ var tickReducer = function tickReducer(state, action) {
     var timeElapsed = Date.now() - state.startTime;
     bokMilestones.push({ count: nextBokMilestone, time: timeElapsed });
     nextBokMilestone *= 10;
-    console.log(bokMilestones);
-    console.log(nextBokMilestone);
   }
 
   return _extends({}, state, {
@@ -1551,7 +1549,7 @@ module.exports = {
   CAB_COLOR: '#2f4f4f',
   TRUCK_CAPACITY: 16,
   TRUCK_COST: 80,
-  AUTOMATION_COST: 0,
+  AUTOMATION_COST: 150,
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',

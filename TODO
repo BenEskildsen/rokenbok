@@ -1,6 +1,9 @@
 
  - - - - - - TODO - - - - - -
  - Implement buying/placing as a queue instead of a single value
+ - Better performance
+ - Correct implementation of hours place of milestones
+ - Better hints for automation
 
 
  - - - - - - PROBABLY DON'T ACTUALLY NEED (UPON FURTHER REFLECTION) - - - - - -
