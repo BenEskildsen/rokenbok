@@ -27,7 +27,7 @@ var getWorldCoord = function getWorldCoord(state, x, y) {
 
 var thetaToNearestBase = function thetaToNearestBase(state, entity) {
   var bases = state.entities.filter(function (e) {
-    return e.type == 'base';
+    return e.type == 'base' || e.type == 'factory';
   });
   var theta = 0;
   var shortestDist = Infinity;

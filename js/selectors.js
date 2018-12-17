@@ -21,7 +21,7 @@ const getWorldCoord = (state: State, x: number, y: number): {x: number, y: numbe
 };
 
 const thetaToNearestBase = (state: State, entity): number => {
-  const bases = state.entities.filter(e => e.type == 'base');
+  const bases = state.entities.filter(e => e.type == 'base' || e.type == 'factory');
   let theta = 0;
   let shortestDist = Infinity;
   for (let i = 0; i < bases.length; i++) {

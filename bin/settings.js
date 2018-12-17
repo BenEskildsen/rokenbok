@@ -21,6 +21,7 @@ module.exports = {
   TRUCK_TURN_SPEED: 7 * Math.PI / 180,
   TRUCK_COLOR: 'lightgray',
   CAB_COLOR: '#2f4f4f',
+  TRUCK_CAPACITY: 16,
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',

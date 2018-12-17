@@ -75,9 +75,21 @@ const computePhysics = (state): Array<Entity> => {
     }
   }
 
+  // Handle trucks dropping at factory
+  const truckEntities = entities.filter(entity => entity.type == 'truck');
+  const factoryEntities = entities.filter(entity => entity.type == 'factory');
+  for (const truckEntity of truckEntities) {
+    for (const factoryEntity of factoryEntities) {
+      if (collided(truckEntity, factoryEntity)) {
+        factoryEntity.collected += truckEntity.carrying.length;
+        truckEntity.carrying = [];
+      }
+    }
+  }
+
+
   // Handle miner collisions
   const minerEntities = entities.filter(entity => entity.type == 'miner');
-  const truckEntities = entities.filter(entity => entity.type == 'truck');
   for (const minerEntity of minerEntities) {
     for (const entity of nonBokEntities) {
       // Give boks to base/factory/truck

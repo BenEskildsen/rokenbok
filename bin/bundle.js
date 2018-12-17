@@ -465,86 +465,50 @@ var computePhysics = function computePhysics(state) {
     }
   }
 
-  // Handle miner collisions
-  var minerEntities = entities.filter(function (entity) {
-    return entity.type == 'miner';
-  });
+  // Handle trucks dropping at factory
   var truckEntities = entities.filter(function (entity) {
     return entity.type == 'truck';
+  });
+  var factoryEntities = entities.filter(function (entity) {
+    return entity.type == 'factory';
   });
   var _iteratorNormalCompletion2 = true;
   var _didIteratorError2 = false;
   var _iteratorError2 = undefined;
 
   try {
-    for (var _iterator2 = minerEntities[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var minerEntity = _step2.value;
-      var _iteratorNormalCompletion3 = true;
-      var _didIteratorError3 = false;
-      var _iteratorError3 = undefined;
+    for (var _iterator2 = truckEntities[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var truckEntity = _step2.value;
+      var _iteratorNormalCompletion4 = true;
+      var _didIteratorError4 = false;
+      var _iteratorError4 = undefined;
 
       try {
-        for (var _iterator3 = nonBokEntities[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var _entity2 = _step3.value;
+        for (var _iterator4 = factoryEntities[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+          var factoryEntity = _step4.value;
 
-          // Give boks to base/factory/truck
-          if (_entity2.type == 'truck' && collided(minerEntity, _entity2)) {
-            _entity2.carrying = _entity2.carrying.concat(minerEntity.carrying);
-            minerEntity.carrying = [];
-            turnMinerAround(minerEntity);
-          }
-          if (_entity2.type == 'factory' && collided(minerEntity, _entity2)) {
-            _entity2.collected += minerEntity.carrying.length;
-            minerEntity.carrying = [];
-            turnMinerAround(minerEntity);
-          }
-          if (_entity2.type == 'base' && collided(minerEntity, _entity2)) {
-            minerEntity.speed = 0; // chill at the base until a truck comes
-            var _iteratorNormalCompletion4 = true;
-            var _didIteratorError4 = false;
-            var _iteratorError4 = undefined;
-
-            try {
-              for (var _iterator4 = truckEntities[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                var truckEntity = _step4.value;
-
-                if (collided(_entity2, truckEntity)) {
-                  truckEntity.carrying = truckEntity.carrying.concat(minerEntity.carrying);
-                  minerEntity.carrying = [];
-                  turnMinerAround(minerEntity);
-                }
-              }
-            } catch (err) {
-              _didIteratorError4 = true;
-              _iteratorError4 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                  _iterator4.return();
-                }
-              } finally {
-                if (_didIteratorError4) {
-                  throw _iteratorError4;
-                }
-              }
-            }
+          if (collided(truckEntity, factoryEntity)) {
+            factoryEntity.collected += truckEntity.carrying.length;
+            truckEntity.carrying = [];
           }
         }
       } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion3 && _iterator3.return) {
-            _iterator3.return();
+          if (!_iteratorNormalCompletion4 && _iterator4.return) {
+            _iterator4.return();
           }
         } finally {
-          if (_didIteratorError3) {
-            throw _iteratorError3;
+          if (_didIteratorError4) {
+            throw _iteratorError4;
           }
         }
       }
     }
+
+    // Handle miner collisions
   } catch (err) {
     _didIteratorError2 = true;
     _iteratorError2 = err;
@@ -556,6 +520,97 @@ var computePhysics = function computePhysics(state) {
     } finally {
       if (_didIteratorError2) {
         throw _iteratorError2;
+      }
+    }
+  }
+
+  var minerEntities = entities.filter(function (entity) {
+    return entity.type == 'miner';
+  });
+  var _iteratorNormalCompletion3 = true;
+  var _didIteratorError3 = false;
+  var _iteratorError3 = undefined;
+
+  try {
+    for (var _iterator3 = minerEntities[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+      var minerEntity = _step3.value;
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
+
+      try {
+        for (var _iterator5 = nonBokEntities[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var _entity2 = _step5.value;
+
+          // Give boks to base/factory/truck
+          if (_entity2.type == 'truck' && collided(minerEntity, _entity2) && _entity2.carrying.length < TRUCK_CAPACITY) {
+            _entity2.carrying = _entity2.carrying.concat(minerEntity.carrying);
+            minerEntity.carrying = [];
+            turnMinerAround(minerEntity);
+          }
+          if (_entity2.type == 'factory' && collided(minerEntity, _entity2)) {
+            _entity2.collected += minerEntity.carrying.length;
+            minerEntity.carrying = [];
+            turnMinerAround(minerEntity);
+          }
+          if (_entity2.type == 'base' && collided(minerEntity, _entity2)) {
+            minerEntity.speed = 0; // chill at the base until a truck comes
+            var _iteratorNormalCompletion6 = true;
+            var _didIteratorError6 = false;
+            var _iteratorError6 = undefined;
+
+            try {
+              for (var _iterator6 = truckEntities[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+                var _truckEntity = _step6.value;
+
+                if (collided(_entity2, _truckEntity) && _truckEntity.carrying.length < TRUCK_CAPACITY) {
+                  _truckEntity.carrying = _truckEntity.carrying.concat(minerEntity.carrying);
+                  minerEntity.carrying = [];
+                  turnMinerAround(minerEntity);
+                }
+              }
+            } catch (err) {
+              _didIteratorError6 = true;
+              _iteratorError6 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                  _iterator6.return();
+                }
+              } finally {
+                if (_didIteratorError6) {
+                  throw _iteratorError6;
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion5 && _iterator5.return) {
+            _iterator5.return();
+          }
+        } finally {
+          if (_didIteratorError5) {
+            throw _iteratorError5;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    _didIteratorError3 = true;
+    _iteratorError3 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion3 && _iterator3.return) {
+        _iterator3.return();
+      }
+    } finally {
+      if (_didIteratorError3) {
+        throw _iteratorError3;
       }
     }
   }
@@ -1031,7 +1086,7 @@ var getWorldCoord = function getWorldCoord(state, x, y) {
 
 var thetaToNearestBase = function thetaToNearestBase(state, entity) {
   var bases = state.entities.filter(function (e) {
-    return e.type == 'base';
+    return e.type == 'base' || e.type == 'factory';
   });
   var theta = 0;
   var shortestDist = Infinity;
@@ -1075,6 +1130,7 @@ module.exports = {
   TRUCK_TURN_SPEED: 7 * Math.PI / 180,
   TRUCK_COLOR: 'lightgray',
   CAB_COLOR: '#2f4f4f',
+  TRUCK_CAPACITY: 16,
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',
