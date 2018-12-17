@@ -106,6 +106,7 @@ var getInitialState = function getInitialState() {
   return {
     running: true,
     entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)]),
+    placing: null,
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
@@ -136,7 +137,7 @@ var seedBoks = function seedBoks() {
 module.exports = {
   getInitialState: getInitialState
 };
-},{"../settings":16,"./makeEntity":3}],3:[function(require,module,exports){
+},{"../settings":17,"./makeEntity":3}],3:[function(require,module,exports){
 "use strict";
 
 var make = function make(type, x, y) {
@@ -206,7 +207,7 @@ store.subscribe(function () {
   return renderToCanvas(store.getState());
 });
 gameRunner.interval = gameRunner.start(store);
-},{"./controls":1,"./reducers/rootReducer":6,"./render/render":9,"./settings":16,"./ui/Sidebar.react":18,"react":31,"react-dom":28,"redux":32}],5:[function(require,module,exports){
+},{"./controls":1,"./reducers/rootReducer":7,"./render/render":10,"./settings":17,"./ui/Sidebar.react":19,"react":32,"react-dom":29,"redux":33}],5:[function(require,module,exports){
 'use strict';
 
 var _require = require('../selectors'),
@@ -317,7 +318,37 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 module.exports = {
   entityReducer: entityReducer
 };
-},{"../selectors":15,"../settings":16,"../utils":19}],6:[function(require,module,exports){
+},{"../selectors":16,"../settings":17,"../utils":20}],6:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _require = require('../entities/makeEntity'),
+    make = _require.make;
+
+var placeReducer = function placeReducer(state, action) {
+  var entities = state.entities,
+      placing = state.placing;
+  var x = action.x,
+      y = action.y;
+
+
+  if (placing === null) {
+    return state;
+  }
+
+  entities.push(make(placing, x, y));
+
+  return _extends({}, state, {
+    entities: entities,
+    placing: null
+  });
+};
+
+module.exports = {
+  placeReducer: placeReducer
+};
+},{"../entities/makeEntity":3}],7:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -333,6 +364,9 @@ var _require3 = require('./tickReducer'),
 
 var _require4 = require('./viewReducer'),
     viewReducer = _require4.viewReducer;
+
+var _require5 = require('./placeReducer'),
+    placeReducer = _require5.placeReducer;
 
 var rootReducer = function rootReducer(state, action) {
   if (state === undefined) return getInitialState();
@@ -354,12 +388,14 @@ var rootReducer = function rootReducer(state, action) {
     case 'DEACCELERATE':
     case 'TURN':
       return entityReducer(state, action);
+    case 'PLACE':
+      return placeReducer(state, action);
   }
   return state;
 };
 
 module.exports = { rootReducer: rootReducer };
-},{"../entities/initState":2,"./entityReducer":5,"./tickReducer":7,"./viewReducer":8}],7:[function(require,module,exports){
+},{"../entities/initState":2,"./entityReducer":5,"./placeReducer":6,"./tickReducer":8,"./viewReducer":9}],8:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -685,7 +721,7 @@ var collided = function collided(entityA, entityB) {
 module.exports = {
   tickReducer: tickReducer
 };
-},{"../selectors":15,"../settings":16,"../utils":19}],8:[function(require,module,exports){
+},{"../selectors":16,"../settings":17,"../utils":20}],9:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -770,7 +806,7 @@ var viewReducer = function viewReducer(state, action) {
 module.exports = {
   viewReducer: viewReducer
 };
-},{"../settings":16}],9:[function(require,module,exports){
+},{"../settings":17}],10:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -891,7 +927,7 @@ var renderBase = function renderBase(ctx, entity) {
 };
 
 module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };
-},{"../settings":16,"./renderBok":10,"./renderFactory":11,"./renderMiner":12,"./renderTruck":13,"./shapes":14}],10:[function(require,module,exports){
+},{"../settings":17,"./renderBok":11,"./renderFactory":12,"./renderMiner":13,"./renderTruck":14,"./shapes":15}],11:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -910,7 +946,7 @@ var renderBok = function renderBok(ctx, entity) {
 };
 
 module.exports = { renderBok: renderBok };
-},{"../settings":16,"./shapes":14}],11:[function(require,module,exports){
+},{"../settings":17,"./shapes":15}],12:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -943,7 +979,7 @@ var renderFactory = function renderFactory(ctx, entity) {
 };
 
 module.exports = { renderFactory: renderFactory };
-},{"../settings":16}],12:[function(require,module,exports){
+},{"../settings":17}],13:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1021,7 +1057,7 @@ var renderMiner = function renderMiner(ctx, entity) {
 };
 
 module.exports = { renderMiner: renderMiner };
-},{"../settings":16,"./renderBok":10,"./shapes":14}],13:[function(require,module,exports){
+},{"../settings":17,"./renderBok":11,"./shapes":15}],14:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1086,7 +1122,7 @@ var renderTruck = function renderTruck(ctx, entity) {
 };
 
 module.exports = { renderTruck: renderTruck };
-},{"../settings":16,"./renderBok":10,"./shapes":14}],14:[function(require,module,exports){
+},{"../settings":17,"./renderBok":11,"./shapes":15}],15:[function(require,module,exports){
 "use strict";
 
 var renderCircle = function renderCircle(ctx, x, y, radius, color) {
@@ -1112,7 +1148,7 @@ module.exports = {
   renderRect: renderRect,
   renderCircle: renderCircle
 };
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 var _require = require('./settings'),
@@ -1162,7 +1198,7 @@ module.exports = {
   getWorldCoord: getWorldCoord,
   thetaToNearestBase: thetaToNearestBase
 };
-},{"./settings":16,"./utils":19}],16:[function(require,module,exports){
+},{"./settings":17,"./utils":20}],17:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -1197,7 +1233,7 @@ module.exports = {
   BASE_RADIUS: 50,
   BASE_COLOR: 'rgba(127, 255, 212, 0.5)'
 };
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1273,7 +1309,7 @@ var Card = function (_React$Component) {
 }(React.Component);
 
 module.exports = Card;
-},{"React":22}],18:[function(require,module,exports){
+},{"React":23}],19:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1333,7 +1369,7 @@ var Sidebar = function (_React$Component) {
 }(React.Component);
 
 module.exports = Sidebar;
-},{"./Card.react":17,"React":22}],19:[function(require,module,exports){
+},{"./Card.react":18,"React":23}],20:[function(require,module,exports){
 'use strict';
 
 var floor = Math.floor,
@@ -1500,7 +1536,7 @@ module.exports = {
   bounce: bounce,
   distance: distance
 };
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -3344,7 +3380,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":41,"object-assign":23,"prop-types/checkPropTypes":24}],21:[function(require,module,exports){
+},{"_process":42,"object-assign":24,"prop-types/checkPropTypes":25}],22:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -3370,7 +3406,7 @@ _currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.P
 if(null!=b){void 0!==b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.3",
 __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":23}],22:[function(require,module,exports){
+},{"object-assign":24}],23:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3381,7 +3417,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":20,"./cjs/react.production.min.js":21,"_process":41}],23:[function(require,module,exports){
+},{"./cjs/react.development.js":21,"./cjs/react.production.min.js":22,"_process":42}],24:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -3473,7 +3509,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3568,7 +3604,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":25,"_process":41}],25:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":26,"_process":42}],26:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3582,7 +3618,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react-dom.development.js
@@ -23313,7 +23349,7 @@ module.exports = reactDom;
 }
 
 }).call(this,require('_process'))
-},{"_process":41,"object-assign":23,"prop-types/checkPropTypes":24,"react":31,"scheduler":37,"scheduler/tracing":38}],27:[function(require,module,exports){
+},{"_process":42,"object-assign":24,"prop-types/checkPropTypes":25,"react":32,"scheduler":38,"scheduler/tracing":39}],28:[function(require,module,exports){
 /** @license React v16.6.1
  * react-dom.production.min.js
  *
@@ -23564,7 +23600,7 @@ void 0:t("40");return a._reactRootContainer?(Oh(function(){$h(null,null,a,!1,fun
 Ka,La,Ca.injectEventPluginsByName,qa,Ra,function(a){za(a,Qa)},Ib,Jb,Jd,Ea]},unstable_createRoot:function(a,b){Yh(a)?void 0:t("299","unstable_createRoot");return new Xh(a,!0,null!=b&&!0===b.hydrate)}};(function(a){var b=a.findFiberByHostInstance;return Ve(n({},a,{findHostInstanceByFiber:function(a){a=nd(a);return null===a?null:a.stateNode},findFiberByHostInstance:function(a){return b?b(a):null}}))})({findFiberByHostInstance:Ia,bundleType:0,version:"16.6.3",rendererPackageName:"react-dom"});
 var ei={default:bi},fi=ei&&bi||ei;module.exports=fi.default||fi;
 
-},{"object-assign":23,"react":31,"scheduler":37}],28:[function(require,module,exports){
+},{"object-assign":24,"react":32,"scheduler":38}],29:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23606,13 +23642,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":26,"./cjs/react-dom.production.min.js":27,"_process":41}],29:[function(require,module,exports){
-arguments[4][20][0].apply(exports,arguments)
-},{"_process":41,"dup":20,"object-assign":23,"prop-types/checkPropTypes":24}],30:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":27,"./cjs/react-dom.production.min.js":28,"_process":42}],30:[function(require,module,exports){
 arguments[4][21][0].apply(exports,arguments)
-},{"dup":21,"object-assign":23}],31:[function(require,module,exports){
+},{"_process":42,"dup":21,"object-assign":24,"prop-types/checkPropTypes":25}],31:[function(require,module,exports){
 arguments[4][22][0].apply(exports,arguments)
-},{"./cjs/react.development.js":29,"./cjs/react.production.min.js":30,"_process":41,"dup":22}],32:[function(require,module,exports){
+},{"dup":22,"object-assign":24}],32:[function(require,module,exports){
+arguments[4][23][0].apply(exports,arguments)
+},{"./cjs/react.development.js":30,"./cjs/react.production.min.js":31,"_process":42,"dup":23}],33:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24263,7 +24299,7 @@ exports.compose = compose;
 exports.__DO_NOT_USE__ActionTypes = ActionTypes;
 
 }).call(this,require('_process'))
-},{"_process":41,"symbol-observable":39}],33:[function(require,module,exports){
+},{"_process":42,"symbol-observable":40}],34:[function(require,module,exports){
 (function (process){
 /** @license React v0.11.3
  * scheduler-tracing.development.js
@@ -24687,7 +24723,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 }
 
 }).call(this,require('_process'))
-},{"_process":41}],34:[function(require,module,exports){
+},{"_process":42}],35:[function(require,module,exports){
 /** @license React v0.11.3
  * scheduler-tracing.production.min.js
  *
@@ -24699,7 +24735,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 
 'use strict';Object.defineProperty(exports,"__esModule",{value:!0});var b=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.unstable_clear=function(a){return a()};exports.unstable_getCurrent=function(){return null};exports.unstable_getThreadID=function(){return++b};exports.unstable_trace=function(a,d,c){return c()};exports.unstable_wrap=function(a){return a};exports.unstable_subscribe=function(){};exports.unstable_unsubscribe=function(){};
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (process,global){
 /** @license React v0.11.3
  * scheduler.development.js
@@ -25337,7 +25373,7 @@ exports.unstable_shouldYield = unstable_shouldYield;
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":41}],36:[function(require,module,exports){
+},{"_process":42}],37:[function(require,module,exports){
 (function (global){
 /** @license React v0.11.3
  * scheduler.production.min.js
@@ -25362,7 +25398,7 @@ b=c.previous;b.next=c.previous=a;a.next=c;a.previous=b}return a};exports.unstabl
 exports.unstable_shouldYield=function(){return!f&&(null!==d&&d.expirationTime<l||w())};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25373,7 +25409,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":35,"./cjs/scheduler.production.min.js":36,"_process":41}],38:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":36,"./cjs/scheduler.production.min.js":37,"_process":42}],39:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25384,7 +25420,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler-tracing.development.js":33,"./cjs/scheduler-tracing.production.min.js":34,"_process":41}],39:[function(require,module,exports){
+},{"./cjs/scheduler-tracing.development.js":34,"./cjs/scheduler-tracing.production.min.js":35,"_process":42}],40:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -25416,7 +25452,7 @@ if (typeof self !== 'undefined') {
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ponyfill.js":40}],40:[function(require,module,exports){
+},{"./ponyfill.js":41}],41:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25440,7 +25476,7 @@ function symbolObservablePonyfill(root) {
 
 	return result;
 };
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 

@@ -14,6 +14,9 @@ var _require3 = require('./tickReducer'),
 var _require4 = require('./viewReducer'),
     viewReducer = _require4.viewReducer;
 
+var _require5 = require('./placeReducer'),
+    placeReducer = _require5.placeReducer;
+
 var rootReducer = function rootReducer(state, action) {
   if (state === undefined) return getInitialState();
 
@@ -34,6 +37,8 @@ var rootReducer = function rootReducer(state, action) {
     case 'DEACCELERATE':
     case 'TURN':
       return entityReducer(state, action);
+    case 'PLACE':
+      return placeReducer(state, action);
   }
   return state;
 };

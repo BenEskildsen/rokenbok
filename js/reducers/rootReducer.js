@@ -4,13 +4,14 @@ const {getInitialState} = require('../entities/initState');
 const {entityReducer} = require('./entityReducer');
 const {tickReducer} = require('./tickReducer');
 const {viewReducer} = require('./viewReducer');
+const {placeReducer} = require('./placeReducer');
 
 import type {State} from 'types';
 
 const rootReducer = (state: State, action: Action): State => {
-	if (state === undefined) return getInitialState();
+  if (state === undefined) return getInitialState();
 
-	switch (action.type) {
+  switch (action.type) {
     case 'TOGGLE':
       return {
         ...state,
@@ -28,7 +29,9 @@ const rootReducer = (state: State, action: Action): State => {
     case 'DEACCELERATE':
     case 'TURN':
       return entityReducer(state, action);
-	}
+    case 'PLACE':
+      return placeReducer(state, action);
+  }
   return state;
 };
 
