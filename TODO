@@ -2,7 +2,6 @@
  - - - - - - TODO - - - - - -
  - UI card explaining how selected miners work
  - UI + data structure for recording truck movements and playing back
- - placing selects the new entity
  - Implement buying automating trucks
  - Implement buying/placing as a queue instead of a single value
  - Implement timer in background
@@ -28,3 +27,4 @@
  - visualize what trucks/miners are carrying
  - UI for tracking collected boks
  - UI for buying more trucks/miners/bases
+ - placing selects the new entity
