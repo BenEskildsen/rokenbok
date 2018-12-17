@@ -16,15 +16,14 @@ const renderMiner = (ctx, entity) => {
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
   
-  carrying.forEach(carryingEntity => {
-    if (carryingEntity.type == 'bok') {
-      renderBok(ctx, {
-        ...carryingEntity,
-        x,
-        y,
-      });
-    }
-  });
+  const bokEntities = carrying.filter(entity => entity.type == 'bok');
+  for (const bokEntity of bokEntities) {
+    renderBok(ctx, {
+      ...bokEntity,
+      x,
+      y,
+    });
+  }
 
   // render pointer
   ctx.save();

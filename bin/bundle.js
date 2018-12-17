@@ -103,9 +103,11 @@ var FAC_POS_X = 400;
 var FAC_POS_Y = 400;
 
 var getInitialState = function getInitialState() {
+  var truck = make('truck', -50, -50);
+  truck.carrying = [make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0), make('bok', 0, 0)];
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, 75), make('factory', FAC_POS_X, FAC_POS_Y)]),
+    entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), truck, make('miner', 75, 75), make('factory', FAC_POS_X, FAC_POS_Y)]),
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
@@ -125,7 +127,7 @@ var seedBoks = function seedBoks() {
   var boks = [];
   for (var x = -1000; x < 1000; x += 5) {
     for (var y = -1000; y < 1000; y += 5) {
-      if (Math.sqrt(x * x + y * y) >= 200 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 600) {
+      if (Math.sqrt(x * x + y * y) >= 400 && Math.sqrt((x - FAC_POS_X) * (x - FAC_POS_X) + (y - FAC_POS_Y) * (y - FAC_POS_Y)) >= 400) {
         boks.push(make('bok', x, y));
       }
     }
@@ -865,16 +867,39 @@ var renderMiner = function renderMiner(ctx, entity) {
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
 
-  carrying.forEach(function (carryingEntity) {
-    if (carryingEntity.type == 'bok') {
-      renderBok(ctx, _extends({}, carryingEntity, {
+  var bokEntities = carrying.filter(function (entity) {
+    return entity.type == 'bok';
+  });
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = bokEntities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var bokEntity = _step.value;
+
+      renderBok(ctx, _extends({}, bokEntity, {
         x: x,
         y: y
       }));
     }
-  });
 
-  // render pointer
+    // render pointer
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
   ctx.save();
   ctx.strokeStyle = 'black';
   ctx.translate(x, y);
@@ -889,6 +914,8 @@ module.exports = { renderMiner: renderMiner };
 },{"../settings":16,"./renderBok":10,"./shapes":14}],13:[function(require,module,exports){
 'use strict';
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _require = require('./shapes'),
     renderRect = _require.renderRect;
 
@@ -898,7 +925,14 @@ var _require2 = require('../settings'),
     TRUCK_COLOR = _require2.TRUCK_COLOR,
     CAB_COLOR = _require2.CAB_COLOR,
     BACKGROUND_COLOR = _require2.BACKGROUND_COLOR,
-    SELECT_COLOR = _require2.SELECT_COLOR;
+    SELECT_COLOR = _require2.SELECT_COLOR,
+    BOK_SIZE = _require2.BOK_SIZE;
+
+var _require3 = require('./renderBok'),
+    renderBok = _require3.renderBok;
+
+var floor = Math.floor;
+
 
 var renderTruck = function renderTruck(ctx, entity) {
   var x = entity.x,
@@ -906,7 +940,8 @@ var renderTruck = function renderTruck(ctx, entity) {
       theta = entity.theta,
       prevX = entity.prevX,
       prevY = entity.prevY,
-      prevTheta = entity.prevTheta;
+      prevTheta = entity.prevTheta,
+      carrying = entity.carrying;
 
   if (entity.selected) {
     renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
@@ -916,17 +951,32 @@ var renderTruck = function renderTruck(ctx, entity) {
     renderRect(ctx, prevX, prevY, prevTheta, TRUCK_WIDTH + 3, TRUCK_HEIGHT + 3, BACKGROUND_COLOR);
   }
   renderRect(ctx, x, y, theta, TRUCK_WIDTH, TRUCK_HEIGHT, TRUCK_COLOR);
-  // render cab
+
   ctx.save();
-  ctx.fillStyle = CAB_COLOR;
   ctx.translate(x, y);
   ctx.rotate(theta);
+
+  // fill carried boks
+  var bokEntities = carrying.filter(function (entity) {
+    return entity.type == 'bok';
+  });
+  for (var i = 0; i < bokEntities.length; i++) {
+    var bokEntity = bokEntities[i];
+    renderBok(ctx, _extends({}, bokEntity, {
+      x: -(i % 4 * floor(TRUCK_WIDTH / 4) - 10),
+      y: -(floor(i / 4) * (BOK_SIZE + 2) - 3)
+    }));
+  }
+
+  // fill cab
+  ctx.fillStyle = CAB_COLOR;
   ctx.fillRect(-TRUCK_WIDTH / 2, TRUCK_HEIGHT / 6, TRUCK_WIDTH, TRUCK_HEIGHT / 3);
+
   ctx.restore();
 };
 
 module.exports = { renderTruck: renderTruck };
-},{"../settings":16,"./shapes":14}],14:[function(require,module,exports){
+},{"../settings":16,"./renderBok":10,"./shapes":14}],14:[function(require,module,exports){
 "use strict";
 
 var renderCircle = function renderCircle(ctx, x, y, radius, color) {

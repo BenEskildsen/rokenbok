@@ -31,16 +31,39 @@ var renderMiner = function renderMiner(ctx, entity) {
   }
   renderCircle(ctx, x, y, MINER_RADIUS, MINER_COLOR);
 
-  carrying.forEach(function (carryingEntity) {
-    if (carryingEntity.type == 'bok') {
-      renderBok(ctx, _extends({}, carryingEntity, {
+  var bokEntities = carrying.filter(function (entity) {
+    return entity.type == 'bok';
+  });
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = bokEntities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var bokEntity = _step.value;
+
+      renderBok(ctx, _extends({}, bokEntity, {
         x: x,
         y: y
       }));
     }
-  });
 
-  // render pointer
+    // render pointer
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
   ctx.save();
   ctx.strokeStyle = 'black';
   ctx.translate(x, y);
