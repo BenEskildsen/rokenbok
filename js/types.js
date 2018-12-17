@@ -20,6 +20,9 @@ export type State = {
   entities: Array<Entity>,
   placing: ?string, // which entity type we're placing
   automatedTrucks: boolean,
+  startTime: number,
+  bokMilestones: Array<object>,
+  nextBokMilestone: number,
   view: {
     width: number,
     height: number,

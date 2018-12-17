@@ -35,8 +35,18 @@ const thetaToNearestBase = (state: State, entity): number => {
   return theta;
 };
 
+const getBokCollected = (state: State): number => {
+  const factories = state.entities.filter(e => e.type == 'factory');
+  let totalBokCollected = 0;
+  for (const factory of factories) {
+    totalBokCollected += factory.totalCollected
+  }
+  return totalBokCollected;
+}
+
 module.exports = {
   getSelectedEntities,
   getWorldCoord,
   thetaToNearestBase,
+  getBokCollected,
 }

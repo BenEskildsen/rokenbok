@@ -17,7 +17,8 @@ var _require2 = require('../utils'),
     distance = _require2.distance;
 
 var _require3 = require('../selectors'),
-    thetaToNearestBase = _require3.thetaToNearestBase;
+    thetaToNearestBase = _require3.thetaToNearestBase,
+    getBokCollected = _require3.getBokCollected;
 
 var tickReducer = function tickReducer(state, action) {
   var imgCount = state.view.imgCount;
@@ -27,8 +28,23 @@ var tickReducer = function tickReducer(state, action) {
     image = null;
     shouldRender = true;
   }
+
+  var totalBokCollected = getBokCollected(state);
+  var bokMilestones = state.bokMilestones,
+      nextBokMilestone = state.nextBokMilestone;
+
+  if (totalBokCollected >= nextBokMilestone) {
+    var timeElapsed = Date.now() - state.startTime;
+    bokMilestones.push({ count: nextBokMilestone, time: timeElapsed });
+    nextBokMilestone *= 10;
+    console.log(bokMilestones);
+    console.log(nextBokMilestone);
+  }
+
   return _extends({}, state, {
     entities: computePhysics(state),
+    bokMilestones: bokMilestones,
+    nextBokMilestone: nextBokMilestone,
     view: _extends({}, state.view, {
       image: image,
       shouldRender: shouldRender,

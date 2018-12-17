@@ -3,6 +3,7 @@ const Card = require('./Card.react');
 const {
   TRUCK_COST, MINER_COST, BASE_COST, AUTOMATION_COST,
 } = require('../settings');
+const {floor} = Math;
 
 class Sidebar extends React.Component {
   constructor(props) {
@@ -15,12 +16,15 @@ class Sidebar extends React.Component {
     const {dispatch} = this.props.store;
     const cards = [];
     const factory = this.state.entities.filter(e => e.type == 'factory')[0];
+    const milestones = this.state.bokMilestones.map(formatMilestone);
     cards.push(<Card
       key="titleCard"
       title={'Rokenbok Factory'}
       content={[
         'Total Bok Collected: ' + factory.totalCollected,
         'Current Bok: ' + factory.collected,
+        'Milestone \u00a0 Time',
+        ...milestones,
       ]} />
     );
 
@@ -95,5 +99,19 @@ const makeBuyCard = (entityType, entityCost, dispatch) => {
       }]} />
   );
 };
+
+const formatMilestone = (milestone) => {
+  const {count, time} = milestone
+
+  let totalSecs = floor(time / 1000);
+
+  const countStr = String(count).padEnd(9, '\u00a0');
+
+  const secsStr = String(totalSecs % 60).padStart(2, '0');
+  const minsStr = String(floor(totalSecs / 60) % 60).padStart(2, '0');
+  const hoursStr = String(floor(totalSecs / 360)).padStart(2, '0');
+
+  return `${countStr} | ${hoursStr}:${minsStr}:${secsStr}`
+}
 
 module.exports = Sidebar;

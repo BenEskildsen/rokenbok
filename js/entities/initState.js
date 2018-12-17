@@ -21,6 +21,9 @@ const getInitialState = (): State => {
     ],
     automatedTrucks: false,
     placing: null,
+    startTime: Date.now(),
+    bokMilestones: [],
+    nextBokMilestone: 10,
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,

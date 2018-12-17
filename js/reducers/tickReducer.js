@@ -12,7 +12,7 @@ const {
   BASE_RADIUS,
 } = require('../settings');
 const {distance} = require('../utils');
-const {thetaToNearestBase} = require('../selectors');
+const {thetaToNearestBase, getBokCollected} = require('../selectors');
 
 const tickReducer = (state: State, action: Action): State => {
   const imgCount = state.view.imgCount;
@@ -22,9 +22,20 @@ const tickReducer = (state: State, action: Action): State => {
     image = null;
     shouldRender = true;
   }
+ 
+  const totalBokCollected = getBokCollected(state);
+  let {bokMilestones, nextBokMilestone} = state;
+  if (totalBokCollected >= nextBokMilestone) {
+    const timeElapsed = Date.now() - state.startTime;
+    bokMilestones.push({count: nextBokMilestone, time: timeElapsed});
+    nextBokMilestone *= 10;
+  }
+
   return {
     ...state,
     entities: computePhysics(state),
+    bokMilestones,
+    nextBokMilestone,
     view: {
       ...state.view,
       image,

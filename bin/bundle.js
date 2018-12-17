@@ -117,6 +117,9 @@ var getInitialState = function getInitialState() {
     entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)]),
     automatedTrucks: false,
     placing: null,
+    startTime: Date.now(),
+    bokMilestones: [],
+    nextBokMilestone: 10,
     view: {
       width: VIEW_WIDTH,
       height: VIEW_HEIGHT,
@@ -529,7 +532,8 @@ var _require2 = require('../utils'),
     distance = _require2.distance;
 
 var _require3 = require('../selectors'),
-    thetaToNearestBase = _require3.thetaToNearestBase;
+    thetaToNearestBase = _require3.thetaToNearestBase,
+    getBokCollected = _require3.getBokCollected;
 
 var tickReducer = function tickReducer(state, action) {
   var imgCount = state.view.imgCount;
@@ -539,8 +543,23 @@ var tickReducer = function tickReducer(state, action) {
     image = null;
     shouldRender = true;
   }
+
+  var totalBokCollected = getBokCollected(state);
+  var bokMilestones = state.bokMilestones,
+      nextBokMilestone = state.nextBokMilestone;
+
+  if (totalBokCollected >= nextBokMilestone) {
+    var timeElapsed = Date.now() - state.startTime;
+    bokMilestones.push({ count: nextBokMilestone, time: timeElapsed });
+    nextBokMilestone *= 10;
+    console.log(bokMilestones);
+    console.log(nextBokMilestone);
+  }
+
   return _extends({}, state, {
     entities: computePhysics(state),
+    bokMilestones: bokMilestones,
+    nextBokMilestone: nextBokMilestone,
     view: _extends({}, state.view, {
       image: image,
       shouldRender: shouldRender,
@@ -1307,10 +1326,44 @@ var thetaToNearestBase = function thetaToNearestBase(state, entity) {
   return theta;
 };
 
+var getBokCollected = function getBokCollected(state) {
+  var factories = state.entities.filter(function (e) {
+    return e.type == 'factory';
+  });
+  var totalBokCollected = 0;
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = factories[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var factory = _step.value;
+
+      totalBokCollected += factory.totalCollected;
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  return totalBokCollected;
+};
+
 module.exports = {
   getSelectedEntities: getSelectedEntities,
   getWorldCoord: getWorldCoord,
-  thetaToNearestBase: thetaToNearestBase
+  thetaToNearestBase: thetaToNearestBase,
+  getBokCollected: getBokCollected
 };
 },{"./settings":18,"./utils":21}],18:[function(require,module,exports){
 'use strict';
@@ -1436,6 +1489,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -1450,6 +1505,8 @@ var _require = require('../settings'),
     MINER_COST = _require.MINER_COST,
     BASE_COST = _require.BASE_COST,
     AUTOMATION_COST = _require.AUTOMATION_COST;
+
+var floor = Math.floor;
 
 var Sidebar = function (_React$Component) {
   _inherits(Sidebar, _React$Component);
@@ -1475,10 +1532,11 @@ var Sidebar = function (_React$Component) {
       var factory = this.state.entities.filter(function (e) {
         return e.type == 'factory';
       })[0];
+      var milestones = this.state.bokMilestones.map(formatMilestone);
       cards.push(React.createElement(Card, {
         key: 'titleCard',
         title: 'Rokenbok Factory',
-        content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected] }));
+        content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected, 'Milestone \xA0 Time'].concat(_toConsumableArray(milestones)) }));
 
       // selection card
       var title = 'Right click to select';
@@ -1544,6 +1602,22 @@ var makeBuyCard = function makeBuyCard(entityType, entityCost, dispatch) {
         dispatch({ type: 'BUY', entityType: entityType });
       }
     }] });
+};
+
+var formatMilestone = function formatMilestone(milestone) {
+  var count = milestone.count,
+      time = milestone.time;
+
+
+  var totalSecs = floor(time / 1000);
+
+  var countStr = String(count).padEnd(9, '\xA0');
+
+  var secsStr = String(totalSecs % 60).padStart(2, '0');
+  var minsStr = String(floor(totalSecs / 60) % 60).padStart(2, '0');
+  var hoursStr = String(floor(totalSecs / 360)).padStart(2, '0');
+
+  return countStr + ' | ' + hoursStr + ':' + minsStr + ':' + secsStr;
 };
 
 module.exports = Sidebar;

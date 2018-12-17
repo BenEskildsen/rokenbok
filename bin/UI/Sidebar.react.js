@@ -4,6 +4,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -18,6 +20,8 @@ var _require = require('../settings'),
     MINER_COST = _require.MINER_COST,
     BASE_COST = _require.BASE_COST,
     AUTOMATION_COST = _require.AUTOMATION_COST;
+
+var floor = Math.floor;
 
 var Sidebar = function (_React$Component) {
   _inherits(Sidebar, _React$Component);
@@ -43,10 +47,11 @@ var Sidebar = function (_React$Component) {
       var factory = this.state.entities.filter(function (e) {
         return e.type == 'factory';
       })[0];
+      var milestones = this.state.bokMilestones.map(formatMilestone);
       cards.push(React.createElement(Card, {
         key: 'titleCard',
         title: 'Rokenbok Factory',
-        content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected] }));
+        content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected, 'Milestone \xA0 Time'].concat(_toConsumableArray(milestones)) }));
 
       // selection card
       var title = 'Right click to select';
@@ -112,6 +117,22 @@ var makeBuyCard = function makeBuyCard(entityType, entityCost, dispatch) {
         dispatch({ type: 'BUY', entityType: entityType });
       }
     }] });
+};
+
+var formatMilestone = function formatMilestone(milestone) {
+  var count = milestone.count,
+      time = milestone.time;
+
+
+  var totalSecs = floor(time / 1000);
+
+  var countStr = String(count).padEnd(9, '\xA0');
+
+  var secsStr = String(totalSecs % 60).padStart(2, '0');
+  var minsStr = String(floor(totalSecs / 60) % 60).padStart(2, '0');
+  var hoursStr = String(floor(totalSecs / 360)).padStart(2, '0');
+
+  return countStr + ' | ' + hoursStr + ':' + minsStr + ':' + secsStr;
 };
 
 module.exports = Sidebar;
