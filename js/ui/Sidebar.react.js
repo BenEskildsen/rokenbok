@@ -1,5 +1,8 @@
 const React = require('React');
 const Card = require('./Card.react');
+const {
+  TRUCK_COST, MINER_COST, BASE_COST, AUTOMATION_COST,
+} = require('../settings');
 
 class Sidebar extends React.Component {
   constructor(props) {
@@ -7,9 +10,6 @@ class Sidebar extends React.Component {
     props.store.subscribe(() => this.setState({...this.props.store.getState()}));
     this.state = {...this.props.store.getState()};
   }
-
-  onClick() {
-  };
 
   render() {
     const {dispatch} = this.props.store;
@@ -24,6 +24,10 @@ class Sidebar extends React.Component {
       ]} />
     );
 
+    cards.push(makeBuyCard('miner', MINER_COST, dispatch));
+    cards.push(makeBuyCard('truck', TRUCK_COST, dispatch));
+    cards.push(makeBuyCard('base', BASE_COST, dispatch));
+    cards.push(makeBuyCard('automate trucks', AUTOMATION_COST, dispatch));
     return (
       <div className="sidebar">
         {cards}
@@ -31,5 +35,27 @@ class Sidebar extends React.Component {
     );
   }
 }
+
+const makeBuyCard = (entityType, entityCost, dispatch) => {
+  const content = ['Cost: ' + entityCost + ' bok'];
+  if (entityType == 'miner') {
+    content.push(
+        'Once you click "Buy", right click in the range of the factory or a base to place'
+    );
+  }
+  return (
+    <Card
+      key={"buy" + entityType + "Card"}
+      title={'Buy ' + entityType}
+      content={content}
+      action={{
+        name: 'Buy',
+        func: () => {
+          console.log(entityType);
+          dispatch({type: 'BUY', entityType});
+        }
+      }} />
+  );
+};
 
 module.exports = Sidebar;

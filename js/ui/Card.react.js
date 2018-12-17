@@ -16,7 +16,7 @@ class Card extends React.Component {
     let button = null;
     if (this.props.action != null) {
       button = (
-        <button onClick={() => this.props.action.func}>
+        <button onClick={this.props.action.func}>
           {this.props.action.name}
         </button>
       );

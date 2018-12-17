@@ -144,7 +144,7 @@ var seedBoks = function seedBoks() {
 module.exports = {
   getInitialState: getInitialState
 };
-},{"../settings":17,"./makeEntity":3}],3:[function(require,module,exports){
+},{"../settings":18,"./makeEntity":3}],3:[function(require,module,exports){
 "use strict";
 
 var make = function make(type, x, y) {
@@ -214,7 +214,45 @@ store.subscribe(function () {
   return renderToCanvas(store.getState());
 });
 gameRunner.interval = gameRunner.start(store);
-},{"./controls":1,"./reducers/rootReducer":7,"./render/render":10,"./settings":17,"./ui/Sidebar.react":19,"react":32,"react-dom":29,"redux":33}],5:[function(require,module,exports){
+},{"./controls":1,"./reducers/rootReducer":8,"./render/render":11,"./settings":18,"./ui/Sidebar.react":20,"react":33,"react-dom":30,"redux":34}],5:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _require = require('../settings'),
+    MINER_COST = _require.MINER_COST,
+    TRUCK_COST = _require.TRUCK_COST,
+    BASE_COST = _require.BASE_COST,
+    AUTOMATION_COST = _require.AUTOMATION_COST;
+
+var costLookup = _defineProperty({
+  miner: MINER_COST,
+  truck: TRUCK_COST,
+  base: BASE_COST
+}, 'automate trucks', AUTOMATION_COST);
+
+var buyReducer = function buyReducer(state, action) {
+  var factory = state.entities.filter(function (e) {
+    return e.type == 'factory';
+  })[0];
+  var cost = costLookup[action.entityType];
+  if (factory.collected < cost) {
+    return state;
+  }
+  factory.collected -= cost;
+  if (action.entityType == 'automate trucks') {
+    // TODO implement buying automating trucks
+    return state;
+  }
+  return _extends({}, state, {
+    placing: action.entityType
+  });
+};
+
+module.exports = { buyReducer: buyReducer };
+},{"../settings":18}],6:[function(require,module,exports){
 'use strict';
 
 var _require = require('../selectors'),
@@ -325,7 +363,7 @@ var maybeSelect = function maybeSelect(entities, worldCoord) {
 module.exports = {
   entityReducer: entityReducer
 };
-},{"../selectors":16,"../settings":17,"../utils":20}],6:[function(require,module,exports){
+},{"../selectors":17,"../settings":18,"../utils":21}],7:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -359,7 +397,7 @@ var placeReducer = function placeReducer(state, action) {
 module.exports = {
   placeReducer: placeReducer
 };
-},{"../entities/makeEntity":3,"../selectors":16}],7:[function(require,module,exports){
+},{"../entities/makeEntity":3,"../selectors":17}],8:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -378,6 +416,9 @@ var _require4 = require('./viewReducer'),
 
 var _require5 = require('./placeReducer'),
     placeReducer = _require5.placeReducer;
+
+var _require6 = require('./buyReducer'),
+    buyReducer = _require6.buyReducer;
 
 var rootReducer = function rootReducer(state, action) {
   if (state === undefined) return getInitialState();
@@ -399,6 +440,8 @@ var rootReducer = function rootReducer(state, action) {
     case 'DEACCELERATE':
     case 'TURN':
       return entityReducer(state, action);
+    case 'BUY':
+      return buyReducer(state, action);
     case 'PLACE':
       return placeReducer(state, action);
   }
@@ -406,7 +449,7 @@ var rootReducer = function rootReducer(state, action) {
 };
 
 module.exports = { rootReducer: rootReducer };
-},{"../entities/initState":2,"./entityReducer":5,"./placeReducer":6,"./tickReducer":8,"./viewReducer":9}],8:[function(require,module,exports){
+},{"../entities/initState":2,"./buyReducer":5,"./entityReducer":6,"./placeReducer":7,"./tickReducer":9,"./viewReducer":10}],9:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -732,7 +775,7 @@ var collided = function collided(entityA, entityB) {
 module.exports = {
   tickReducer: tickReducer
 };
-},{"../selectors":16,"../settings":17,"../utils":20}],9:[function(require,module,exports){
+},{"../selectors":17,"../settings":18,"../utils":21}],10:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -817,7 +860,7 @@ var viewReducer = function viewReducer(state, action) {
 module.exports = {
   viewReducer: viewReducer
 };
-},{"../settings":17}],10:[function(require,module,exports){
+},{"../settings":18}],11:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -938,7 +981,7 @@ var renderBase = function renderBase(ctx, entity) {
 };
 
 module.exports = { renderToCanvas: renderToCanvas, initCanvas: initCanvas };
-},{"../settings":17,"./renderBok":11,"./renderFactory":12,"./renderMiner":13,"./renderTruck":14,"./shapes":15}],11:[function(require,module,exports){
+},{"../settings":18,"./renderBok":12,"./renderFactory":13,"./renderMiner":14,"./renderTruck":15,"./shapes":16}],12:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -957,7 +1000,7 @@ var renderBok = function renderBok(ctx, entity) {
 };
 
 module.exports = { renderBok: renderBok };
-},{"../settings":17,"./shapes":15}],12:[function(require,module,exports){
+},{"../settings":18,"./shapes":16}],13:[function(require,module,exports){
 'use strict';
 
 var _require = require('../settings'),
@@ -990,7 +1033,7 @@ var renderFactory = function renderFactory(ctx, entity) {
 };
 
 module.exports = { renderFactory: renderFactory };
-},{"../settings":17}],13:[function(require,module,exports){
+},{"../settings":18}],14:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1068,7 +1111,7 @@ var renderMiner = function renderMiner(ctx, entity) {
 };
 
 module.exports = { renderMiner: renderMiner };
-},{"../settings":17,"./renderBok":11,"./shapes":15}],14:[function(require,module,exports){
+},{"../settings":18,"./renderBok":12,"./shapes":16}],15:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1133,7 +1176,7 @@ var renderTruck = function renderTruck(ctx, entity) {
 };
 
 module.exports = { renderTruck: renderTruck };
-},{"../settings":17,"./renderBok":11,"./shapes":15}],15:[function(require,module,exports){
+},{"../settings":18,"./renderBok":12,"./shapes":16}],16:[function(require,module,exports){
 "use strict";
 
 var renderCircle = function renderCircle(ctx, x, y, radius, color) {
@@ -1159,7 +1202,7 @@ module.exports = {
   renderRect: renderRect,
   renderCircle: renderCircle
 };
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 var _require = require('./settings'),
@@ -1209,7 +1252,7 @@ module.exports = {
   getWorldCoord: getWorldCoord,
   thetaToNearestBase: thetaToNearestBase
 };
-},{"./settings":17,"./utils":20}],17:[function(require,module,exports){
+},{"./settings":18,"./utils":21}],18:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -1225,6 +1268,7 @@ module.exports = {
   MINER_RADIUS: 5,
   MINER_TURN_SPEED: 7 * Math.PI / 180,
   MINER_COLOR: '#dcdcdc',
+  MINER_COST: 12,
 
   TRUCK_SPEED: 7,
   TRUCK_ACCEL: 0.5,
@@ -1234,6 +1278,8 @@ module.exports = {
   TRUCK_COLOR: 'lightgray',
   CAB_COLOR: '#2f4f4f',
   TRUCK_CAPACITY: 16,
+  TRUCK_COST: 80,
+  AUTOMATION_COST: 200,
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',
@@ -1242,9 +1288,10 @@ module.exports = {
   FACTORY_COLOR: '#696969',
 
   BASE_RADIUS: 50,
-  BASE_COLOR: 'rgba(127, 255, 212, 0.5)'
+  BASE_COLOR: 'rgba(127, 255, 212, 0.5)',
+  BASE_COST: 400
 };
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1280,15 +1327,11 @@ var Card = function (_React$Component) {
   _createClass(Card, [{
     key: "render",
     value: function render() {
-      var _this2 = this;
-
       var button = null;
       if (this.props.action != null) {
         button = React.createElement(
           "button",
-          { onClick: function onClick() {
-              return _this2.props.action.func;
-            } },
+          { onClick: this.props.action.func },
           this.props.action.name
         );
       }
@@ -1320,7 +1363,7 @@ var Card = function (_React$Component) {
 }(React.Component);
 
 module.exports = Card;
-},{"React":23}],19:[function(require,module,exports){
+},{"React":24}],20:[function(require,module,exports){
 'use strict';
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -1335,6 +1378,12 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var React = require('React');
 var Card = require('./Card.react');
+
+var _require = require('../settings'),
+    TRUCK_COST = _require.TRUCK_COST,
+    MINER_COST = _require.MINER_COST,
+    BASE_COST = _require.BASE_COST,
+    AUTOMATION_COST = _require.AUTOMATION_COST;
 
 var Sidebar = function (_React$Component) {
   _inherits(Sidebar, _React$Component);
@@ -1352,9 +1401,6 @@ var Sidebar = function (_React$Component) {
   }
 
   _createClass(Sidebar, [{
-    key: 'onClick',
-    value: function onClick() {}
-  }, {
     key: 'render',
     value: function render() {
       var dispatch = this.props.store.dispatch;
@@ -1368,6 +1414,10 @@ var Sidebar = function (_React$Component) {
         title: 'Rokenbok Factory',
         content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected] }));
 
+      cards.push(makeBuyCard('miner', MINER_COST, dispatch));
+      cards.push(makeBuyCard('truck', TRUCK_COST, dispatch));
+      cards.push(makeBuyCard('base', BASE_COST, dispatch));
+      cards.push(makeBuyCard('automate trucks', AUTOMATION_COST, dispatch));
       return React.createElement(
         'div',
         { className: 'sidebar' },
@@ -1379,8 +1429,26 @@ var Sidebar = function (_React$Component) {
   return Sidebar;
 }(React.Component);
 
+var makeBuyCard = function makeBuyCard(entityType, entityCost, dispatch) {
+  var content = ['Cost: ' + entityCost + ' bok'];
+  if (entityType == 'miner') {
+    content.push('Once you click "Buy", right click in the range of the factory or a base to place');
+  }
+  return React.createElement(Card, {
+    key: "buy" + entityType + "Card",
+    title: 'Buy ' + entityType,
+    content: content,
+    action: {
+      name: 'Buy',
+      func: function func() {
+        console.log(entityType);
+        dispatch({ type: 'BUY', entityType: entityType });
+      }
+    } });
+};
+
 module.exports = Sidebar;
-},{"./Card.react":18,"React":23}],20:[function(require,module,exports){
+},{"../settings":18,"./Card.react":19,"React":24}],21:[function(require,module,exports){
 'use strict';
 
 var floor = Math.floor,
@@ -1547,7 +1615,7 @@ module.exports = {
   bounce: bounce,
   distance: distance
 };
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -3391,7 +3459,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":42,"object-assign":24,"prop-types/checkPropTypes":25}],22:[function(require,module,exports){
+},{"_process":43,"object-assign":25,"prop-types/checkPropTypes":26}],23:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -3417,7 +3485,7 @@ _currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.P
 if(null!=b){void 0!==b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.3",
 __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":24}],23:[function(require,module,exports){
+},{"object-assign":25}],24:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3428,7 +3496,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":21,"./cjs/react.production.min.js":22,"_process":42}],24:[function(require,module,exports){
+},{"./cjs/react.development.js":22,"./cjs/react.production.min.js":23,"_process":43}],25:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -3520,7 +3588,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3615,7 +3683,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":26,"_process":42}],26:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":27,"_process":43}],27:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3629,7 +3697,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react-dom.development.js
@@ -23360,7 +23428,7 @@ module.exports = reactDom;
 }
 
 }).call(this,require('_process'))
-},{"_process":42,"object-assign":24,"prop-types/checkPropTypes":25,"react":32,"scheduler":38,"scheduler/tracing":39}],28:[function(require,module,exports){
+},{"_process":43,"object-assign":25,"prop-types/checkPropTypes":26,"react":33,"scheduler":39,"scheduler/tracing":40}],29:[function(require,module,exports){
 /** @license React v16.6.1
  * react-dom.production.min.js
  *
@@ -23611,7 +23679,7 @@ void 0:t("40");return a._reactRootContainer?(Oh(function(){$h(null,null,a,!1,fun
 Ka,La,Ca.injectEventPluginsByName,qa,Ra,function(a){za(a,Qa)},Ib,Jb,Jd,Ea]},unstable_createRoot:function(a,b){Yh(a)?void 0:t("299","unstable_createRoot");return new Xh(a,!0,null!=b&&!0===b.hydrate)}};(function(a){var b=a.findFiberByHostInstance;return Ve(n({},a,{findHostInstanceByFiber:function(a){a=nd(a);return null===a?null:a.stateNode},findFiberByHostInstance:function(a){return b?b(a):null}}))})({findFiberByHostInstance:Ia,bundleType:0,version:"16.6.3",rendererPackageName:"react-dom"});
 var ei={default:bi},fi=ei&&bi||ei;module.exports=fi.default||fi;
 
-},{"object-assign":24,"react":32,"scheduler":38}],29:[function(require,module,exports){
+},{"object-assign":25,"react":33,"scheduler":39}],30:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23653,13 +23721,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":27,"./cjs/react-dom.production.min.js":28,"_process":42}],30:[function(require,module,exports){
-arguments[4][21][0].apply(exports,arguments)
-},{"_process":42,"dup":21,"object-assign":24,"prop-types/checkPropTypes":25}],31:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":28,"./cjs/react-dom.production.min.js":29,"_process":43}],31:[function(require,module,exports){
 arguments[4][22][0].apply(exports,arguments)
-},{"dup":22,"object-assign":24}],32:[function(require,module,exports){
+},{"_process":43,"dup":22,"object-assign":25,"prop-types/checkPropTypes":26}],32:[function(require,module,exports){
 arguments[4][23][0].apply(exports,arguments)
-},{"./cjs/react.development.js":30,"./cjs/react.production.min.js":31,"_process":42,"dup":23}],33:[function(require,module,exports){
+},{"dup":23,"object-assign":25}],33:[function(require,module,exports){
+arguments[4][24][0].apply(exports,arguments)
+},{"./cjs/react.development.js":31,"./cjs/react.production.min.js":32,"_process":43,"dup":24}],34:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24310,7 +24378,7 @@ exports.compose = compose;
 exports.__DO_NOT_USE__ActionTypes = ActionTypes;
 
 }).call(this,require('_process'))
-},{"_process":42,"symbol-observable":40}],34:[function(require,module,exports){
+},{"_process":43,"symbol-observable":41}],35:[function(require,module,exports){
 (function (process){
 /** @license React v0.11.3
  * scheduler-tracing.development.js
@@ -24734,7 +24802,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 }
 
 }).call(this,require('_process'))
-},{"_process":42}],35:[function(require,module,exports){
+},{"_process":43}],36:[function(require,module,exports){
 /** @license React v0.11.3
  * scheduler-tracing.production.min.js
  *
@@ -24746,7 +24814,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 
 'use strict';Object.defineProperty(exports,"__esModule",{value:!0});var b=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.unstable_clear=function(a){return a()};exports.unstable_getCurrent=function(){return null};exports.unstable_getThreadID=function(){return++b};exports.unstable_trace=function(a,d,c){return c()};exports.unstable_wrap=function(a){return a};exports.unstable_subscribe=function(){};exports.unstable_unsubscribe=function(){};
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 (function (process,global){
 /** @license React v0.11.3
  * scheduler.development.js
@@ -25384,7 +25452,7 @@ exports.unstable_shouldYield = unstable_shouldYield;
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":42}],37:[function(require,module,exports){
+},{"_process":43}],38:[function(require,module,exports){
 (function (global){
 /** @license React v0.11.3
  * scheduler.production.min.js
@@ -25409,7 +25477,7 @@ b=c.previous;b.next=c.previous=a;a.next=c;a.previous=b}return a};exports.unstabl
 exports.unstable_shouldYield=function(){return!f&&(null!==d&&d.expirationTime<l||w())};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25420,7 +25488,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":36,"./cjs/scheduler.production.min.js":37,"_process":42}],39:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":37,"./cjs/scheduler.production.min.js":38,"_process":43}],40:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25431,7 +25499,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler-tracing.development.js":34,"./cjs/scheduler-tracing.production.min.js":35,"_process":42}],40:[function(require,module,exports){
+},{"./cjs/scheduler-tracing.development.js":35,"./cjs/scheduler-tracing.production.min.js":36,"_process":43}],41:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -25463,7 +25531,7 @@ if (typeof self !== 'undefined') {
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ponyfill.js":41}],41:[function(require,module,exports){
+},{"./ponyfill.js":42}],42:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25487,7 +25555,7 @@ function symbolObservablePonyfill(root) {
 
 	return result;
 };
-},{}],42:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 

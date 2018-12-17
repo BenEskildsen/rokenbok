@@ -13,6 +13,7 @@ module.exports = {
   MINER_RADIUS: 5,
   MINER_TURN_SPEED: 7 * Math.PI / 180,
   MINER_COLOR: '#dcdcdc',
+  MINER_COST: 12,
 
   TRUCK_SPEED: 7,
   TRUCK_ACCEL: 0.5,
@@ -22,6 +23,8 @@ module.exports = {
   TRUCK_COLOR: 'lightgray',
   CAB_COLOR: '#2f4f4f',
   TRUCK_CAPACITY: 16,
+  TRUCK_COST: 80,
+  AUTOMATION_COST: 200,
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',
@@ -30,5 +33,6 @@ module.exports = {
   FACTORY_COLOR: '#696969',
 
   BASE_RADIUS: 50,
-  BASE_COLOR: 'rgba(127, 255, 212, 0.5)'
+  BASE_COLOR: 'rgba(127, 255, 212, 0.5)',
+  BASE_COST: 400
 };

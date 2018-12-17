@@ -33,15 +33,11 @@ var Card = function (_React$Component) {
   _createClass(Card, [{
     key: "render",
     value: function render() {
-      var _this2 = this;
-
       var button = null;
       if (this.props.action != null) {
         button = React.createElement(
           "button",
-          { onClick: function onClick() {
-              return _this2.props.action.func;
-            } },
+          { onClick: this.props.action.func },
           this.props.action.name
         );
       }

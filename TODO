@@ -1,8 +1,8 @@
 
  - - - - - - TODO - - - - - -
  - UI card explaining how selected miners work
- - UI for buying more trucks/miners/bases
  - UI + data structure for recording truck movements and playing back
+ - Implement buying automating trucks
 
 
  - - - - - - PROBABLY DON'T ACTUALLY NEED (UPON FURTHER REFLECTION) - - - - - -
@@ -24,3 +24,4 @@
  - miners should stop and wait at base then drop off/pick up at trucks/factories
  - visualize what trucks/miners are carrying
  - UI for tracking collected boks
+ - UI for buying more trucks/miners/bases

@@ -17,6 +17,9 @@ var _require4 = require('./viewReducer'),
 var _require5 = require('./placeReducer'),
     placeReducer = _require5.placeReducer;
 
+var _require6 = require('./buyReducer'),
+    buyReducer = _require6.buyReducer;
+
 var rootReducer = function rootReducer(state, action) {
   if (state === undefined) return getInitialState();
 
@@ -37,6 +40,8 @@ var rootReducer = function rootReducer(state, action) {
     case 'DEACCELERATE':
     case 'TURN':
       return entityReducer(state, action);
+    case 'BUY':
+      return buyReducer(state, action);
     case 'PLACE':
       return placeReducer(state, action);
   }

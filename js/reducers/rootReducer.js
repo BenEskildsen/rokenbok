@@ -5,6 +5,7 @@ const {entityReducer} = require('./entityReducer');
 const {tickReducer} = require('./tickReducer');
 const {viewReducer} = require('./viewReducer');
 const {placeReducer} = require('./placeReducer');
+const {buyReducer} = require('./buyReducer');
 
 import type {State} from 'types';
 
@@ -29,6 +30,8 @@ const rootReducer = (state: State, action: Action): State => {
     case 'DEACCELERATE':
     case 'TURN':
       return entityReducer(state, action);
+    case 'BUY':
+      return buyReducer(state, action);
     case 'PLACE':
       return placeReducer(state, action);
   }

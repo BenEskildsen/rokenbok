@@ -13,6 +13,12 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var React = require('React');
 var Card = require('./Card.react');
 
+var _require = require('../settings'),
+    TRUCK_COST = _require.TRUCK_COST,
+    MINER_COST = _require.MINER_COST,
+    BASE_COST = _require.BASE_COST,
+    AUTOMATION_COST = _require.AUTOMATION_COST;
+
 var Sidebar = function (_React$Component) {
   _inherits(Sidebar, _React$Component);
 
@@ -29,9 +35,6 @@ var Sidebar = function (_React$Component) {
   }
 
   _createClass(Sidebar, [{
-    key: 'onClick',
-    value: function onClick() {}
-  }, {
     key: 'render',
     value: function render() {
       var dispatch = this.props.store.dispatch;
@@ -45,6 +48,10 @@ var Sidebar = function (_React$Component) {
         title: 'Rokenbok Factory',
         content: ['Total Bok Collected: ' + factory.totalCollected, 'Current Bok: ' + factory.collected] }));
 
+      cards.push(makeBuyCard('miner', MINER_COST, dispatch));
+      cards.push(makeBuyCard('truck', TRUCK_COST, dispatch));
+      cards.push(makeBuyCard('base', BASE_COST, dispatch));
+      cards.push(makeBuyCard('automate trucks', AUTOMATION_COST, dispatch));
       return React.createElement(
         'div',
         { className: 'sidebar' },
@@ -55,5 +62,23 @@ var Sidebar = function (_React$Component) {
 
   return Sidebar;
 }(React.Component);
+
+var makeBuyCard = function makeBuyCard(entityType, entityCost, dispatch) {
+  var content = ['Cost: ' + entityCost + ' bok'];
+  if (entityType == 'miner') {
+    content.push('Once you click "Buy", right click in the range of the factory or a base to place');
+  }
+  return React.createElement(Card, {
+    key: "buy" + entityType + "Card",
+    title: 'Buy ' + entityType,
+    content: content,
+    action: {
+      name: 'Buy',
+      func: function func() {
+        console.log(entityType);
+        dispatch({ type: 'BUY', entityType: entityType });
+      }
+    } });
+};
 
 module.exports = Sidebar;
