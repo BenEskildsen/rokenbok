@@ -41,6 +41,7 @@ var rootReducer = function rootReducer(state, action) {
     case 'RECORD':
     case 'STOP':
     case 'PLAY':
+    case 'RETURN':
       return recordReducer(state, action);
     case 'MAYBE_SELECT':
     case 'ACCELERATE':

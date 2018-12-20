@@ -79,6 +79,11 @@ var Sidebar = function (_React$Component) {
               } }, { name: playingName, func: function func() {
                 return dispatch({ type: 'PLAY' });
               } }];
+            if (selEntity.recording.recording) {
+              actions.push({ name: 'Return', func: function func() {
+                  return dispatch({ type: 'RETURN' });
+                } });
+            }
           }
         }
       }

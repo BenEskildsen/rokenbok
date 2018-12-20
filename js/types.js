@@ -16,6 +16,8 @@ export type Entity = {
   recording: {
     recording: boolean,
     playing: boolean,
+    returning: boolean, // returning to initialPos
+    initialPos: {x: number, y: number, theta: number},
     tick: number,
     endTick: number,
     actions: {[tick: number]: Array<Action>},

@@ -7,6 +7,8 @@ var _require = require('../settings'),
     TRUCK_WIDTH = _require.TRUCK_WIDTH,
     TRUCK_HEIGHT = _require.TRUCK_HEIGHT,
     TRUCK_CAPACITY = _require.TRUCK_CAPACITY,
+    TRUCK_ACCEL = _require.TRUCK_ACCEL,
+    TRUCK_TURN_SPEED = _require.TRUCK_TURN_SPEED,
     MINER_SPEED = _require.MINER_SPEED,
     MINER_RADIUS = _require.MINER_RADIUS,
     BOK_SIZE = _require.BOK_SIZE,
@@ -14,7 +16,8 @@ var _require = require('../settings'),
     BASE_RADIUS = _require.BASE_RADIUS;
 
 var _require2 = require('../utils'),
-    distance = _require2.distance;
+    distance = _require2.distance,
+    vecToAngle = _require2.vecToAngle;
 
 var _require3 = require('../selectors'),
     thetaToNearestBase = _require3.thetaToNearestBase,
@@ -77,11 +80,17 @@ var computePhysics = function computePhysics(state) {
 
       if (_entity.recording.recording) {
         _entity.recording.tick++;
+        if (_entity.recording.returning) {
+          truckReturn(_entity);
+        }
       }
       if (_entity.recording.playing) {
         _entity.recording.tick++;
         if (_entity.recording.tick == _entity.recording.endTick) {
           _entity.recording.tick = 0;
+        }
+        if (_entity.recording.returning == true) {
+          truckReturn(_entity);
         }
         var actions = _entity.recording.actions[_entity.recording.tick];
         if (actions) {
@@ -102,6 +111,10 @@ var computePhysics = function computePhysics(state) {
                   break;
                 case 'TURN':
                   truckTurn(_entity, action.dir);
+                  break;
+                case 'RETURN':
+                  _entity.recording.returning = true;
+                  truckReturn(_entity);
                   break;
               }
             }
@@ -360,6 +373,37 @@ var computePhysics = function computePhysics(state) {
       return !entity.shouldDestroy;
     })
   };
+};
+
+var truckReturn = function truckReturn(entity) {
+  var targetPos = entity.recording.initialPos;
+  var THETA_EPSILON = 0.2;
+  if (Math.abs(targetPos.x - entity.x) < 3 && Math.abs(targetPos.y - entity.y) < 3) {
+    entity.x = targetPos.x;
+    entity.y = targetPos.y;
+    entity.speed = 0;
+    entity.accel = 0;
+    if (Math.abs(targetPos.theta - entity.theta) < THETA_EPSILON) {
+      entity.theta = targetPos.theta;
+      entity.thetaSpeed = 0;
+      entity.recording.returning = false;
+      return;
+    }
+    var _dir = targetPos.theta - entity.theta > 0 ? 1 : -1;
+    entity.thetaSpeed = _dir * TRUCK_TURN_SPEED;
+    return;
+  }
+  var vec = { x: targetPos.x - entity.x, y: targetPos.y - entity.y };
+  var toTheta = vecToAngle(vec);
+  if (Math.abs(toTheta - entity.theta) < THETA_EPSILON) {
+    entity.thetaSpeed = 0;
+    entity.accel = TRUCK_ACCEL;
+    return;
+  }
+  entity.speed = 0;
+  entity.accel = 0;
+  var dir = toTheta - entity.theta > 0 ? 1 : -1;
+  entity.thetaSpeed = dir * TRUCK_TURN_SPEED;
 };
 
 var turnMinerAround = function turnMinerAround(minerEntity) {

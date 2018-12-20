@@ -5,13 +5,15 @@ const {
   TRUCK_WIDTH,
   TRUCK_HEIGHT,
   TRUCK_CAPACITY,
+  TRUCK_ACCEL,
+  TRUCK_TURN_SPEED,
   MINER_SPEED,
   MINER_RADIUS,
   BOK_SIZE,
   FACTORY_SIZE,
   BASE_RADIUS,
 } = require('../settings');
-const {distance} = require('../utils');
+const {distance, vecToAngle} = require('../utils');
 const {thetaToNearestBase, getBokCollected} = require('../selectors');
 const {
   truckTurn, truckAccel, truckDeaccel,
@@ -61,11 +63,17 @@ const computePhysics = (
   for (const entity of nonBokEntities) {
     if (entity.recording.recording) {
       entity.recording.tick++;
+      if (entity.recording.returning) {
+        truckReturn(entity);
+      }
     }
     if (entity.recording.playing) {
       entity.recording.tick++;
       if (entity.recording.tick == entity.recording.endTick) {
         entity.recording.tick = 0;
+      }
+      if (entity.recording.returning == true) {
+        truckReturn(entity);
       }
       const actions = entity.recording.actions[entity.recording.tick];
       if (actions) {
@@ -79,6 +87,10 @@ const computePhysics = (
               break;
             case 'TURN':
               truckTurn(entity, action.dir);
+              break;
+            case 'RETURN':
+              entity.recording.returning = true;
+              truckReturn(entity);
               break;
           }
         }
@@ -183,6 +195,37 @@ const computePhysics = (
     entities,
     bokEntities: bokEntities.filter(entity => !entity.shouldDestroy),
   }
+}
+
+const truckReturn = (entity: Entity): void => {
+  const targetPos = entity.recording.initialPos;
+  const THETA_EPSILON = 0.2;
+  if (Math.abs(targetPos.x - entity.x) < 3 && Math.abs(targetPos.y - entity.y) < 3) {
+    entity.x = targetPos.x;
+    entity.y = targetPos.y;
+    entity.speed = 0;
+    entity.accel = 0;
+    if (Math.abs(targetPos.theta - entity.theta) < THETA_EPSILON) {
+      entity.theta = targetPos.theta;
+      entity.thetaSpeed = 0;
+      entity.recording.returning = false;
+      return;
+    }
+    const dir = (targetPos.theta - entity.theta) > 0 ? 1 : -1;
+    entity.thetaSpeed = dir * TRUCK_TURN_SPEED;
+    return;
+  }
+  const vec = {x: targetPos.x - entity.x, y: targetPos.y - entity.y};
+  const toTheta = vecToAngle(vec);
+  if (Math.abs(toTheta - entity.theta) < THETA_EPSILON) {
+    entity.thetaSpeed = 0;
+    entity.accel = TRUCK_ACCEL;
+    return;
+  }
+  entity.speed = 0;
+  entity.accel = 0;
+  const dir = (toTheta - entity.theta) > 0 ? 1 : -1;
+  entity.thetaSpeed = dir * TRUCK_TURN_SPEED;
 }
 
 const turnMinerAround = (minerEntity: Entity): void => {

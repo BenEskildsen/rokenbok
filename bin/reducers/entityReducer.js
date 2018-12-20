@@ -39,7 +39,7 @@ var entityReducer = function entityReducer(state, action) {
         var maybeRecordingActions = entity.recording.actions[entity.recording.tick];
         if (entity.type == 'truck') {
           truckAccel(entity);
-          if (entity.recording.recording) {
+          if (entity.recording.recording && !entity.recording.returning) {
             if (maybeRecordingActions == null) {
               entity.recording.actions[entity.recording.tick] = [];
               maybeRecordingActions = entity.recording.actions[entity.recording.tick];
@@ -58,7 +58,7 @@ var entityReducer = function entityReducer(state, action) {
         var _maybeRecordingActions = _entity.recording.actions[_entity.recording.tick];
         if (_entity.type == 'truck') {
           truckDeaccel(_entity);
-          if (_entity.recording.recording) {
+          if (_entity.recording.recording && !_entity.recording.returning) {
             if (_maybeRecordingActions == null) {
               _entity.recording.actions[_entity.recording.tick] = [];
               _maybeRecordingActions = _entity.recording.actions[_entity.recording.tick];
@@ -77,7 +77,7 @@ var entityReducer = function entityReducer(state, action) {
         var _maybeRecordingActions2 = _entity2.recording.actions[_entity2.recording.tick];
         if (_entity2.type == 'truck') {
           truckTurn(_entity2, action.dir);
-          if (_entity2.recording.recording) {
+          if (_entity2.recording.recording && !_entity2.recording.returning) {
             if (_maybeRecordingActions2 == null) {
               _entity2.recording.actions[_entity2.recording.tick] = [];
               _maybeRecordingActions2 = _entity2.recording.actions[_entity2.recording.tick];

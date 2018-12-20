@@ -53,6 +53,9 @@ class Sidebar extends React.Component {
             {name: 'stop', func: () => dispatch({type: 'STOP'})},
             {name: playingName, func: () => dispatch({type: 'PLAY'})},
           ];
+          if (selEntity.recording.recording) {
+            actions.push({name: 'Return', func: () => dispatch({type: 'RETURN'})});
+          }
         }
       }
     }

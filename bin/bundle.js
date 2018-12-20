@@ -169,6 +169,7 @@ var make = function make(type, x, y) {
     recording: {
       recording: false,
       playing: false,
+      returning: false,
       tick: 0,
       actions: {}
     }
@@ -306,7 +307,7 @@ var entityReducer = function entityReducer(state, action) {
         var maybeRecordingActions = entity.recording.actions[entity.recording.tick];
         if (entity.type == 'truck') {
           truckAccel(entity);
-          if (entity.recording.recording) {
+          if (entity.recording.recording && !entity.recording.returning) {
             if (maybeRecordingActions == null) {
               entity.recording.actions[entity.recording.tick] = [];
               maybeRecordingActions = entity.recording.actions[entity.recording.tick];
@@ -325,7 +326,7 @@ var entityReducer = function entityReducer(state, action) {
         var _maybeRecordingActions = _entity.recording.actions[_entity.recording.tick];
         if (_entity.type == 'truck') {
           truckDeaccel(_entity);
-          if (_entity.recording.recording) {
+          if (_entity.recording.recording && !_entity.recording.returning) {
             if (_maybeRecordingActions == null) {
               _entity.recording.actions[_entity.recording.tick] = [];
               _maybeRecordingActions = _entity.recording.actions[_entity.recording.tick];
@@ -344,7 +345,7 @@ var entityReducer = function entityReducer(state, action) {
         var _maybeRecordingActions2 = _entity2.recording.actions[_entity2.recording.tick];
         if (_entity2.type == 'truck') {
           truckTurn(_entity2, action.dir);
-          if (_entity2.recording.recording) {
+          if (_entity2.recording.recording && !_entity2.recording.returning) {
             if (_maybeRecordingActions2 == null) {
               _entity2.recording.actions[_entity2.recording.tick] = [];
               _maybeRecordingActions2 = _entity2.recording.actions[_entity2.recording.tick];
@@ -514,6 +515,11 @@ var recordReducer = function recordReducer(state, action) {
       selEntity.recording.tick = 0;
       selEntity.recording.actions = {};
       selEntity.recording.recording = true;
+      selEntity.recording.initialPos = {
+        x: selEntity.x,
+        y: selEntity.y,
+        theta: selEntity.theta
+      };
       break;
     case 'STOP':
       selEntity.recording.recording = false;
@@ -525,6 +531,13 @@ var recordReducer = function recordReducer(state, action) {
       selEntity.recording.recording = false;
       selEntity.recording.playing = true;
       selEntity.recording.tick = 0;
+      break;
+    case 'RETURN':
+      selEntity.recording.returning = true;
+      if (!selEntity.recording.actions[selEntity.recording.tick]) {
+        selEntity.recording.actions[selEntity.recording.tick] = [];
+      }
+      selEntity.recording.actions[selEntity.recording.tick].push({ type: 'RETURN' });
       break;
   }
   return state;
@@ -575,6 +588,7 @@ var rootReducer = function rootReducer(state, action) {
     case 'RECORD':
     case 'STOP':
     case 'PLAY':
+    case 'RETURN':
       return recordReducer(state, action);
     case 'MAYBE_SELECT':
     case 'ACCELERATE':
@@ -600,6 +614,8 @@ var _require = require('../settings'),
     TRUCK_WIDTH = _require.TRUCK_WIDTH,
     TRUCK_HEIGHT = _require.TRUCK_HEIGHT,
     TRUCK_CAPACITY = _require.TRUCK_CAPACITY,
+    TRUCK_ACCEL = _require.TRUCK_ACCEL,
+    TRUCK_TURN_SPEED = _require.TRUCK_TURN_SPEED,
     MINER_SPEED = _require.MINER_SPEED,
     MINER_RADIUS = _require.MINER_RADIUS,
     BOK_SIZE = _require.BOK_SIZE,
@@ -607,7 +623,8 @@ var _require = require('../settings'),
     BASE_RADIUS = _require.BASE_RADIUS;
 
 var _require2 = require('../utils'),
-    distance = _require2.distance;
+    distance = _require2.distance,
+    vecToAngle = _require2.vecToAngle;
 
 var _require3 = require('../selectors'),
     thetaToNearestBase = _require3.thetaToNearestBase,
@@ -670,11 +687,17 @@ var computePhysics = function computePhysics(state) {
 
       if (_entity.recording.recording) {
         _entity.recording.tick++;
+        if (_entity.recording.returning) {
+          truckReturn(_entity);
+        }
       }
       if (_entity.recording.playing) {
         _entity.recording.tick++;
         if (_entity.recording.tick == _entity.recording.endTick) {
           _entity.recording.tick = 0;
+        }
+        if (_entity.recording.returning == true) {
+          truckReturn(_entity);
         }
         var actions = _entity.recording.actions[_entity.recording.tick];
         if (actions) {
@@ -695,6 +718,10 @@ var computePhysics = function computePhysics(state) {
                   break;
                 case 'TURN':
                   truckTurn(_entity, action.dir);
+                  break;
+                case 'RETURN':
+                  _entity.recording.returning = true;
+                  truckReturn(_entity);
                   break;
               }
             }
@@ -953,6 +980,37 @@ var computePhysics = function computePhysics(state) {
       return !entity.shouldDestroy;
     })
   };
+};
+
+var truckReturn = function truckReturn(entity) {
+  var targetPos = entity.recording.initialPos;
+  var THETA_EPSILON = 0.2;
+  if (Math.abs(targetPos.x - entity.x) < 3 && Math.abs(targetPos.y - entity.y) < 3) {
+    entity.x = targetPos.x;
+    entity.y = targetPos.y;
+    entity.speed = 0;
+    entity.accel = 0;
+    if (Math.abs(targetPos.theta - entity.theta) < THETA_EPSILON) {
+      entity.theta = targetPos.theta;
+      entity.thetaSpeed = 0;
+      entity.recording.returning = false;
+      return;
+    }
+    var _dir = targetPos.theta - entity.theta > 0 ? 1 : -1;
+    entity.thetaSpeed = _dir * TRUCK_TURN_SPEED;
+    return;
+  }
+  var vec = { x: targetPos.x - entity.x, y: targetPos.y - entity.y };
+  var toTheta = vecToAngle(vec);
+  if (Math.abs(toTheta - entity.theta) < THETA_EPSILON) {
+    entity.thetaSpeed = 0;
+    entity.accel = TRUCK_ACCEL;
+    return;
+  }
+  entity.speed = 0;
+  entity.accel = 0;
+  var dir = toTheta - entity.theta > 0 ? 1 : -1;
+  entity.thetaSpeed = dir * TRUCK_TURN_SPEED;
 };
 
 var turnMinerAround = function turnMinerAround(minerEntity) {
@@ -1574,7 +1632,7 @@ module.exports = {
   CAB_COLOR: '#2f4f4f',
   TRUCK_CAPACITY: 16,
   TRUCK_COST: 80,
-  AUTOMATION_COST: 150,
+  AUTOMATION_COST: 0,
 
   BOK_SIZE: 5,
   BOK_COLOR: 'brown',
@@ -1744,6 +1802,11 @@ var Sidebar = function (_React$Component) {
               } }, { name: playingName, func: function func() {
                 return dispatch({ type: 'PLAY' });
               } }];
+            if (selEntity.recording.recording) {
+              actions.push({ name: 'Return', func: function func() {
+                  return dispatch({ type: 'RETURN' });
+                } });
+            }
           }
         }
       }

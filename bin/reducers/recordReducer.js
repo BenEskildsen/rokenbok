@@ -9,6 +9,11 @@ var recordReducer = function recordReducer(state, action) {
       selEntity.recording.tick = 0;
       selEntity.recording.actions = {};
       selEntity.recording.recording = true;
+      selEntity.recording.initialPos = {
+        x: selEntity.x,
+        y: selEntity.y,
+        theta: selEntity.theta
+      };
       break;
     case 'STOP':
       selEntity.recording.recording = false;
@@ -20,6 +25,13 @@ var recordReducer = function recordReducer(state, action) {
       selEntity.recording.recording = false;
       selEntity.recording.playing = true;
       selEntity.recording.tick = 0;
+      break;
+    case 'RETURN':
+      selEntity.recording.returning = true;
+      if (!selEntity.recording.actions[selEntity.recording.tick]) {
+        selEntity.recording.actions[selEntity.recording.tick] = [];
+      }
+      selEntity.recording.actions[selEntity.recording.tick].push({ type: 'RETURN' });
       break;
   }
   return state;

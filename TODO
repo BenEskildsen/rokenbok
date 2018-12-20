@@ -2,15 +2,13 @@
  - - - - - - TODO - - - - - -
  - Better performance
    - progressive seeding ?
- - Better hints for automation
-   - button that returns you to your original theta
-   - marker where you started
 
 
  - - - - - - PROBABLY DON'T ACTUALLY NEED (UPON FURTHER REFLECTION) - - - - - -
  - use a lookup table for collisions with boks instead of comparing to each
  - Implement buying/placing as a queue instead of a single value
  - store selection on the state, not the entities
+ - marker where your recording started
 
 
  - - - - - - DONE - - - - - -
@@ -36,3 +34,5 @@
  - Implement timer in background
  - Correct implementation of hours place of milestones
  - separate entities for boks
+ - Better hints for automation
+   - button that returns you to your original theta

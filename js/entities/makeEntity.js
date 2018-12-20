@@ -15,6 +15,7 @@ const make = (type, x, y) => {
     recording: {
       recording: false,
       playing: false,
+      returning: false,
       tick: 0,
       actions: {},
     },

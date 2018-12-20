@@ -30,7 +30,7 @@ const entityReducer = (state: State, action: Action): State => {
       let maybeRecordingActions = entity.recording.actions[entity.recording.tick];
       if (entity.type == 'truck') {
         truckAccel(entity);
-        if (entity.recording.recording) {
+        if (entity.recording.recording && !entity.recording.returning) {
           if (maybeRecordingActions == null) {
             entity.recording.actions[entity.recording.tick] = [];
             maybeRecordingActions = entity.recording.actions[entity.recording.tick];
@@ -48,7 +48,7 @@ const entityReducer = (state: State, action: Action): State => {
       let maybeRecordingActions = entity.recording.actions[entity.recording.tick];
       if (entity.type == 'truck') {
         truckDeaccel(entity);
-        if (entity.recording.recording) {
+        if (entity.recording.recording && !entity.recording.returning) {
           if (maybeRecordingActions == null) {
             entity.recording.actions[entity.recording.tick] = [];
             maybeRecordingActions = entity.recording.actions[entity.recording.tick];
@@ -66,7 +66,7 @@ const entityReducer = (state: State, action: Action): State => {
       let maybeRecordingActions = entity.recording.actions[entity.recording.tick];
       if (entity.type == 'truck') {
         truckTurn(entity, action.dir);
-        if (entity.recording.recording) {
+        if (entity.recording.recording && !entity.recording.returning) {
           if (maybeRecordingActions == null) {
             entity.recording.actions[entity.recording.tick] = [];
             maybeRecordingActions = entity.recording.actions[entity.recording.tick];
