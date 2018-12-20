@@ -1,7 +1,5 @@
 'use strict';
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
 var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
     VIEW_HEIGHT = _require.VIEW_HEIGHT,
@@ -17,7 +15,8 @@ var FAC_POS_Y = 400;
 var getInitialState = function getInitialState() {
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)]),
+    entities: [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)],
+    bokEntities: seedBoks(),
     automatedTrucks: false,
     placing: null,
     startTime: Date.now(),

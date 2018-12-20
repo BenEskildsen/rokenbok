@@ -64,32 +64,13 @@ var renderToCanvas = function renderToCanvas(state) {
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = state.entities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = state.bokEntities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var entity = _step.value;
 
-      switch (entity.type) {
-        case 'bok':
-          if (view.shouldRender) {
-            renderBok(ctx, entity);
-          }
-          break;
-        case 'truck':
-          renderTruck(ctx, entity);
-          break;
-        case 'miner':
-          renderMiner(ctx, entity);
-          break;
-        case 'factory':
-          renderFactory(ctx, entity);
-          break;
-        case 'base':
-          renderBase(ctx, entity);
-          break;
+      if (view.shouldRender) {
+        renderBok(ctx, entity);
       }
     }
-    // shhh this is a side-effect on the state so that I can change the state without
-    // causing yet-another-re-render. This flag only exists to try to not render more
-    // than needed
   } catch (err) {
     _didIteratorError = true;
     _iteratorError = err;
@@ -101,6 +82,47 @@ var renderToCanvas = function renderToCanvas(state) {
     } finally {
       if (_didIteratorError) {
         throw _iteratorError;
+      }
+    }
+  }
+
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = state.entities[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var _entity = _step2.value;
+
+      switch (_entity.type) {
+        case 'truck':
+          renderTruck(ctx, _entity);
+          break;
+        case 'miner':
+          renderMiner(ctx, _entity);
+          break;
+        case 'factory':
+          renderFactory(ctx, _entity);
+          break;
+        case 'base':
+          renderBase(ctx, _entity);
+          break;
+      }
+    }
+    // shhh this is a side-effect on the state so that I can change the state without
+    // causing yet-another-re-render. This flag only exists to try to not render more
+    // than needed
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+        _iterator2.return();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
       }
     }
   }

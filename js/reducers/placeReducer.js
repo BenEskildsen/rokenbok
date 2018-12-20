@@ -7,7 +7,7 @@ const {distance} = require('../utils');
 const placeReducer = (state: State, action: Action): State => {
   const {entities, placing} = state;
   const {x, y} = getWorldCoord(state, action.x, action.y);
-  
+
   if (!isValidPlace(state, action)) {
     return state;
   }
@@ -26,11 +26,11 @@ const placeReducer = (state: State, action: Action): State => {
 const isValidPlace = (state: State, action: Action): boolean => {
   const {entities, placing} = state;
   const placeCoord = getWorldCoord(state, action.x, action.y);
-  
+
   if (placing === null) {
     return false;
   }
-  
+
   // require miner/truck to be near base/factory
   if (placing == 'miner' || placing == 'truck') {
     for (const entity of entities) {

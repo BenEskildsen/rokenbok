@@ -13,12 +13,12 @@ const getInitialState = (): State => {
   return {
     running: true,
     entities: [
-      ...seedBoks(),
       make('base', 0, 0),
       make('truck', -50, -50),
       make('miner', 75, -50),
       make('factory', FAC_POS_X, FAC_POS_Y),
     ],
+    bokEntities: seedBoks(),
     automatedTrucks: false,
     placing: null,
     startTime: Date.now(),

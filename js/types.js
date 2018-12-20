@@ -24,7 +24,8 @@ export type Entity = {
 
 export type State = {
   running: boolean,
-  entities: Array<Entity>,
+  entities: Array<Entity>, // no boks
+  bokEntities: Array<Entity>, // boks only
   placing: ?string, // which entity type we're placing
   automatedTrucks: boolean,
   startTime: number,

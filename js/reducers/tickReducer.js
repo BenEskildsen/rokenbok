@@ -34,9 +34,11 @@ const tickReducer = (state: State, action: Action): State => {
     nextBokMilestone *= 10;
   }
 
+  const {entities, bokEntities} = computePhysics(state);
   return {
     ...state,
-    entities: computePhysics(state),
+    entities,
+    bokEntities,
     bokMilestones,
     nextBokMilestone,
     view: {
@@ -48,9 +50,12 @@ const tickReducer = (state: State, action: Action): State => {
   };
 }
 
-const computePhysics = (state): Array<Entity> => {
+const computePhysics = (
+  state,
+): {entities: Array<Entity>, bokEntities: Array<Entity>} => {
   const entities = state.entities;
-  const nonBokEntities = entities.filter(entity => entity.type != 'bok');
+  const bokEntities = state.bokEntities;
+  const nonBokEntities = entities;
 
   // Update ongoing recordings/playbacks
   for (const entity of nonBokEntities) {
@@ -99,7 +104,6 @@ const computePhysics = (state): Array<Entity> => {
   }
 
   // Handle bok collisions
-  const bokEntities = entities.filter(entity => entity.type == 'bok');
   for (let i = 0; i < nonBokEntities.length; i++) {
     const entity = nonBokEntities[i];
     for (let j = 0; j < bokEntities.length; j++) {
@@ -175,7 +179,10 @@ const computePhysics = (state): Array<Entity> => {
     }
   }
 
-  return entities.filter(entity => !entity.shouldDestroy);
+  return {
+    entities,
+    bokEntities: bokEntities.filter(entity => !entity.shouldDestroy),
+  }
 }
 
 const turnMinerAround = (minerEntity: Entity): void => {

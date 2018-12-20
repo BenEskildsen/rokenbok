@@ -97,8 +97,6 @@ module.exports = { setControls: setControls };
 },{}],2:[function(require,module,exports){
 'use strict';
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
 var _require = require('../settings'),
     VIEW_WIDTH = _require.VIEW_WIDTH,
     VIEW_HEIGHT = _require.VIEW_HEIGHT,
@@ -114,7 +112,8 @@ var FAC_POS_Y = 400;
 var getInitialState = function getInitialState() {
   return {
     running: true,
-    entities: [].concat(_toConsumableArray(seedBoks()), [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)]),
+    entities: [make('base', 0, 0), make('truck', -50, -50), make('miner', 75, -50), make('factory', FAC_POS_X, FAC_POS_Y)],
+    bokEntities: seedBoks(),
     automatedTrucks: false,
     placing: null,
     startTime: Date.now(),
@@ -638,8 +637,13 @@ var tickReducer = function tickReducer(state, action) {
     nextBokMilestone *= 10;
   }
 
+  var _computePhysics = computePhysics(state),
+      entities = _computePhysics.entities,
+      bokEntities = _computePhysics.bokEntities;
+
   return _extends({}, state, {
-    entities: computePhysics(state),
+    entities: entities,
+    bokEntities: bokEntities,
     bokMilestones: bokMilestones,
     nextBokMilestone: nextBokMilestone,
     view: _extends({}, state.view, {
@@ -652,9 +656,8 @@ var tickReducer = function tickReducer(state, action) {
 
 var computePhysics = function computePhysics(state) {
   var entities = state.entities;
-  var nonBokEntities = entities.filter(function (entity) {
-    return entity.type != 'bok';
-  });
+  var bokEntities = state.bokEntities;
+  var nonBokEntities = entities;
 
   // Update ongoing recordings/playbacks
   var _iteratorNormalCompletion = true;
@@ -768,9 +771,6 @@ var computePhysics = function computePhysics(state) {
     }
   }
 
-  var bokEntities = entities.filter(function (entity) {
-    return entity.type == 'bok';
-  });
   for (var i = 0; i < nonBokEntities.length; i++) {
     var entity = nonBokEntities[i];
     for (var j = 0; j < bokEntities.length; j++) {
@@ -947,9 +947,12 @@ var computePhysics = function computePhysics(state) {
     }
   }
 
-  return entities.filter(function (entity) {
-    return !entity.shouldDestroy;
-  });
+  return {
+    entities: entities,
+    bokEntities: bokEntities.filter(function (entity) {
+      return !entity.shouldDestroy;
+    })
+  };
 };
 
 var turnMinerAround = function turnMinerAround(minerEntity) {
@@ -1161,32 +1164,13 @@ var renderToCanvas = function renderToCanvas(state) {
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = state.entities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = state.bokEntities[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var entity = _step.value;
 
-      switch (entity.type) {
-        case 'bok':
-          if (view.shouldRender) {
-            renderBok(ctx, entity);
-          }
-          break;
-        case 'truck':
-          renderTruck(ctx, entity);
-          break;
-        case 'miner':
-          renderMiner(ctx, entity);
-          break;
-        case 'factory':
-          renderFactory(ctx, entity);
-          break;
-        case 'base':
-          renderBase(ctx, entity);
-          break;
+      if (view.shouldRender) {
+        renderBok(ctx, entity);
       }
     }
-    // shhh this is a side-effect on the state so that I can change the state without
-    // causing yet-another-re-render. This flag only exists to try to not render more
-    // than needed
   } catch (err) {
     _didIteratorError = true;
     _iteratorError = err;
@@ -1198,6 +1182,47 @@ var renderToCanvas = function renderToCanvas(state) {
     } finally {
       if (_didIteratorError) {
         throw _iteratorError;
+      }
+    }
+  }
+
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
+
+  try {
+    for (var _iterator2 = state.entities[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var _entity = _step2.value;
+
+      switch (_entity.type) {
+        case 'truck':
+          renderTruck(ctx, _entity);
+          break;
+        case 'miner':
+          renderMiner(ctx, _entity);
+          break;
+        case 'factory':
+          renderFactory(ctx, _entity);
+          break;
+        case 'base':
+          renderBase(ctx, _entity);
+          break;
+      }
+    }
+    // shhh this is a side-effect on the state so that I can change the state without
+    // causing yet-another-re-render. This flag only exists to try to not render more
+    // than needed
+  } catch (err) {
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion2 && _iterator2.return) {
+        _iterator2.return();
+      }
+    } finally {
+      if (_didIteratorError2) {
+        throw _iteratorError2;
       }
     }
   }

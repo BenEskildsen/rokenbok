@@ -48,13 +48,13 @@ const renderToCanvas = (state) => {
     view.shouldRender = false;
     return;
   }
+  for (const entity of state.bokEntities) {
+    if (view.shouldRender) {
+      renderBok(ctx, entity);
+    }
+  }
   for (const entity of state.entities) {
     switch (entity.type) {
-      case 'bok':
-        if (view.shouldRender) {
-          renderBok(ctx, entity);
-        }
-        break;
       case 'truck':
         renderTruck(ctx, entity);
         break;

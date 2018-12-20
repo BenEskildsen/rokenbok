@@ -44,8 +44,13 @@ var tickReducer = function tickReducer(state, action) {
     nextBokMilestone *= 10;
   }
 
+  var _computePhysics = computePhysics(state),
+      entities = _computePhysics.entities,
+      bokEntities = _computePhysics.bokEntities;
+
   return _extends({}, state, {
-    entities: computePhysics(state),
+    entities: entities,
+    bokEntities: bokEntities,
     bokMilestones: bokMilestones,
     nextBokMilestone: nextBokMilestone,
     view: _extends({}, state.view, {
@@ -58,9 +63,8 @@ var tickReducer = function tickReducer(state, action) {
 
 var computePhysics = function computePhysics(state) {
   var entities = state.entities;
-  var nonBokEntities = entities.filter(function (entity) {
-    return entity.type != 'bok';
-  });
+  var bokEntities = state.bokEntities;
+  var nonBokEntities = entities;
 
   // Update ongoing recordings/playbacks
   var _iteratorNormalCompletion = true;
@@ -174,9 +178,6 @@ var computePhysics = function computePhysics(state) {
     }
   }
 
-  var bokEntities = entities.filter(function (entity) {
-    return entity.type == 'bok';
-  });
   for (var i = 0; i < nonBokEntities.length; i++) {
     var entity = nonBokEntities[i];
     for (var j = 0; j < bokEntities.length; j++) {
@@ -353,9 +354,12 @@ var computePhysics = function computePhysics(state) {
     }
   }
 
-  return entities.filter(function (entity) {
-    return !entity.shouldDestroy;
-  });
+  return {
+    entities: entities,
+    bokEntities: bokEntities.filter(function (entity) {
+      return !entity.shouldDestroy;
+    })
+  };
 };
 
 var turnMinerAround = function turnMinerAround(minerEntity) {
